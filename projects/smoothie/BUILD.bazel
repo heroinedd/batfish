@@ -1,0 +1,57 @@
+load("@rules_java//java:defs.bzl", "java_binary", "java_library")
+load("@batfish//skylark:pmd_test.bzl", "pmd_test")
+
+package(default_visibility = ["//visibility:public"])
+
+java_binary(
+    name = "main",
+    srcs = ["src/main/java/org/batfish/main/Main.java"],
+    main_class = "org.batfish.main.Main",
+    deps = [
+        ":smoothie",
+        "//projects/batfish-common-protocol/src/main/java:common_lib",
+        "//projects/batfish/src/main/java/org/batfish",
+        "@maven//:com_google_code_findbugs_jsr305",
+        "@maven//:com_google_code_gson_gson",
+        "@maven//:org_apache_commons_commons_lang3",
+        "@maven//:org_apache_logging_log4j_log4j_api",
+        "@maven//:org_jgrapht_jgrapht_core",
+        "@maven//:org_jgrapht_jgrapht_io",
+    ],
+)
+
+java_library(
+    name = "smoothie",
+    srcs = glob([
+        "src/main/**/*.java",
+    ]),
+    deps = [
+        "//projects/batfish",
+        "//projects/batfish-common-protocol:common",
+        "@maven//:com_github_ben_manes_caffeine_caffeine",
+        "@maven//:com_google_code_findbugs_jsr305",
+        "@maven//:com_google_code_gson_gson",
+        "@maven//:com_google_guava_guava",
+        "@maven//:commons_io_commons_io",
+        "@maven//:org_apache_commons_commons_collections4",
+        "@maven//:org_apache_commons_commons_configuration2",
+        "@maven//:org_apache_commons_commons_lang3",
+        "@maven//:org_apache_logging_log4j_log4j_api",
+        "@maven//:org_jgrapht_jgrapht_core",
+        "@maven//:org_jgrapht_jgrapht_io",
+        "@maven//:org_lz4_lz4_java",
+        "@maven//:com_fasterxml_jackson_core_jackson_annotations",
+        "@maven//:com_fasterxml_jackson_core_jackson_core",
+        "@maven//:com_fasterxml_jackson_core_jackson_databind",
+    ],
+)
+
+pmd_test(
+    name = "pmd",
+    lib = ":smoothie",
+)
+
+#alias(
+#    name = "smoothie_testlib",
+#    actual = "//projects/smoothie/src/test/java:smoothie_testlib",
+#)

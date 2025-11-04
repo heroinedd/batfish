@@ -71,6 +71,7 @@ BATFISH_MAVEN_ARTIFACTS = [
     "org.parboiled:parboiled-java:1.4.1",
     "org.skyscreamer:jsonassert:1.5.3",
     "org.yaml:snakeyaml:2.5",
+    "org.jgrapht:jgrapht-io:1.5.2",
 ]
 
 BATFISH_MAVEN_BOMS = [
