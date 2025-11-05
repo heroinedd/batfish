@@ -71,7 +71,7 @@ public class TopologyZoo {
               .next()
               .getId();
       for (int client : configurations.keySet()) {
-        if (!externals.contains(client)) {
+        if (!externals.contains(client) && client != rr) {
           iBgpSession(configurations.get(rr), configurations.get(client), INT_ASN, true);
         }
       }

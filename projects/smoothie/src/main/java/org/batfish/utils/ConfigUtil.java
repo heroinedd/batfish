@@ -8,9 +8,7 @@ import org.batfish.datamodel.*;
 import org.batfish.datamodel.bgp.Ipv4UnicastAddressFamily;
 import org.batfish.datamodel.bgp.LocalOriginationTypeTieBreaker;
 import org.batfish.datamodel.bgp.NextHopIpTieBreaker;
-import org.batfish.datamodel.ospf.OspfArea;
-import org.batfish.datamodel.ospf.OspfInterfaceSettings;
-import org.batfish.datamodel.ospf.OspfProcess;
+import org.batfish.datamodel.ospf.*;
 import org.batfish.datamodel.routing_policy.RoutingPolicy;
 import org.batfish.datamodel.routing_policy.expr.*;
 import org.batfish.datamodel.routing_policy.statement.*;
@@ -19,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.batfish.datamodel.Names.*;
@@ -29,6 +28,8 @@ public class ConfigUtil {
   public static final String CISCO_ETH = "Ethernet";
   public static final String CISCO_NULL = "Null";
   public static final int CISCO_DEFAULT_LOCAL_BGP_WEIGHT = 32768;
+  public static final String OSPF_PROCESS_NAME = "1";
+  public static final long OSPF_AREA = 0L;
 
   public static Configuration router(String routerName, String loopbackIp) {
     Configuration c =
@@ -36,6 +37,7 @@ public class ConfigUtil {
             .setHostname(routerName)
             .setConfigurationFormat(ConfigurationFormat.CISCO_IOS)
             .build();
+    c.setExportBgpFromBgpRib(true);
     Vrf.builder().setOwner(c).setName(Configuration.DEFAULT_VRF_NAME).build();
     Interface.builder()
         .setName(CISCO_LOOPBACK)
@@ -70,6 +72,9 @@ public class ConfigUtil {
 
   /** Set up ospf process for a router configuration */
   public static OspfProcess ospfProcess(Configuration c) {
+    String hostname = c.getHostname();
+    String vrfName = c.getDefaultVrf().getName();
+
     // set ospf interface setting for all ethernet and loopback interfaces
     c.getAllInterfaces()
         .values()
@@ -77,11 +82,11 @@ public class ConfigUtil {
             iface ->
                 iface.setOspfSettings(
                     OspfInterfaceSettings.builder()
-                        .setProcess("1")
+                        .setProcess(OSPF_PROCESS_NAME)
                         .setEnabled(true)
                         .setPassive(iface.getName().contains(CISCO_LOOPBACK))
                         .setCost(1)
-                        .setAreaName(0L)
+                        .setAreaName(OSPF_AREA)
                         .build()));
     // initialize the ospf area
     OspfArea area =
@@ -89,13 +94,35 @@ public class ConfigUtil {
             .setNumber(0)
             .setInterfaces(ImmutableSet.copyOf(c.getAllInterfaces().keySet()))
             .build();
+    // ospf neighbor configs
+    Map<OspfNeighborConfigId, OspfNeighborConfig> neighborConfigs =
+        c.getAllInterfaces().values().stream()
+            .filter(iface -> iface.getName().contains(CISCO_ETH))
+            .collect(
+                Collectors.toMap(
+                    iface ->
+                        new OspfNeighborConfigId(
+                            hostname,
+                            vrfName,
+                            OSPF_PROCESS_NAME,
+                            iface.getName(),
+                            (ConcreteInterfaceAddress) iface.getAddress()),
+                    iface ->
+                        OspfNeighborConfig.builder()
+                            .setHostname(hostname)
+                            .setVrfName(vrfName)
+                            .setInterfaceName(iface.getName())
+                            .setIp(((ConcreteInterfaceAddress) iface.getAddress()).getIp())
+                            .setArea(OSPF_AREA)
+                            .build()));
     // build the ospf process
     return OspfProcess.builder()
-        .setProcessId("1")
+        .setProcessId(OSPF_PROCESS_NAME)
         .setVrf(c.getDefaultVrf())
         .setRouterId(getInterfaceIp(c, CISCO_LOOPBACK))
         .setReferenceBandwidth(10e9)
-        .setAreas(ImmutableSortedMap.of(0L, area))
+        .setAreas(ImmutableSortedMap.of(OSPF_AREA, area))
+        .setNeighborConfigs(neighborConfigs)
         .build();
   }
 
@@ -107,7 +134,7 @@ public class ConfigUtil {
             .setIbgpAdminCost(100)
             .setLocalAdminCost(100)
             .setVrf(c.getDefaultVrf())
-            .setRouterId(getInterfaceIp(c, CISCO_LOOPBACK)) // todo
+            .setRouterId(getInterfaceIp(c, CISCO_LOOPBACK))
             .setLocalOriginationTypeTieBreaker(LocalOriginationTypeTieBreaker.NO_PREFERENCE)
             .setNetworkNextHopIpTieBreaker(NextHopIpTieBreaker.HIGHEST_NEXT_HOP_IP)
             .setRedistributeNextHopIpTieBreaker(NextHopIpTieBreaker.HIGHEST_NEXT_HOP_IP)
@@ -136,7 +163,12 @@ public class ConfigUtil {
             .setRemoteAs(asn)
             .setPeerAddress(loopback2)
             .setIpv4UnicastAddressFamily(
-                Ipv4UnicastAddressFamily.builder().setRouteReflectorClient(client).build())
+                Ipv4UnicastAddressFamily.builder()
+                    .setRouteReflectorClient(client)
+                    .setExportPolicy(
+                        generatedBgpPeerExportPolicyName(
+                            c1.getDefaultVrf().getName(), loopback2.toString()))
+                    .build())
             .build();
     BgpActivePeerConfig peer21 =
         BgpActivePeerConfig.builder()
@@ -144,10 +176,17 @@ public class ConfigUtil {
             .setLocalIp(loopback2)
             .setRemoteAs(asn)
             .setPeerAddress(loopback1)
-            .setIpv4UnicastAddressFamily(Ipv4UnicastAddressFamily.builder().build())
+            .setIpv4UnicastAddressFamily(
+                Ipv4UnicastAddressFamily.builder()
+                    .setExportPolicy(
+                        generatedBgpPeerExportPolicyName(
+                            c1.getDefaultVrf().getName(), loopback1.toString()))
+                    .build())
             .build();
     c1.getDefaultVrf().getBgpProcess().getActiveNeighbors().put(loopback2, peer12);
     c2.getDefaultVrf().getBgpProcess().getActiveNeighbors().put(loopback1, peer21);
+    bgpNeighborSpecificPolicy(c1, loopback2);
+    bgpNeighborSpecificPolicy(c2, loopback1);
   }
 
   public static void eBgpSession(
@@ -237,25 +276,28 @@ public class ConfigUtil {
         new SetWeight(new LiteralInt(CISCO_DEFAULT_LOCAL_BGP_WEIGHT)));
 
     // create origination prefilter from listed advertised networks
-    Conjunction exportNetworkConditions = new Conjunction();
-    exportNetworkConditions
-        .getConjuncts()
-        .add(
-            new MatchPrefixSet(
-                DestinationNetwork.instance(), new ExplicitPrefixSet(proc.getOriginationSpace())));
-    exportNetworkConditions
-        .getConjuncts()
-        .add(
-            new Not(
-                new MatchProtocol(
-                    RoutingProtocol.BGP, RoutingProtocol.IBGP, RoutingProtocol.AGGREGATE)));
-    redistributionPolicy.addStatement(
-        new If(
-            "Add network statement routes to BGP",
-            exportNetworkConditions,
-            ImmutableList.of(
-                new SetOrigin(new LiteralOrigin(OriginType.IGP, null)),
-                Statements.ExitAccept.toStaticStatement())));
+    if (!proc.getOriginationSpace().isEmpty()) {
+      Conjunction exportNetworkConditions = new Conjunction();
+      exportNetworkConditions
+          .getConjuncts()
+          .add(
+              new MatchPrefixSet(
+                  DestinationNetwork.instance(),
+                  new ExplicitPrefixSet(proc.getOriginationSpace())));
+      exportNetworkConditions
+          .getConjuncts()
+          .add(
+              new Not(
+                  new MatchProtocol(
+                      RoutingProtocol.BGP, RoutingProtocol.IBGP, RoutingProtocol.AGGREGATE)));
+      redistributionPolicy.addStatement(
+          new If(
+              "Add network statement routes to BGP",
+              exportNetworkConditions,
+              ImmutableList.of(
+                  new SetOrigin(new LiteralOrigin(OriginType.IGP, null)),
+                  Statements.ExitAccept.toStaticStatement())));
+    }
 
     // Finalize redistribution policy and attach to process
     redistributionPolicy.addStatement(Statements.ExitReject.toStaticStatement()).build();
