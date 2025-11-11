@@ -9,10 +9,13 @@ import org.batfish.utils.GmlUtil;
 import org.batfish.utils.ResultPrinter;
 import org.jgrapht.graph.SimpleGraph;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.batfish.utils.GmlUtil.readTopology;
 
@@ -48,7 +51,7 @@ public class Main {
     attrs.stream().sorted().forEach(System.out::println);
   }
 
-  public static void zoo(String name) {
+  public static void zooFromVI(String name) {
     Map<String, Configuration> configurations = TopologyZoo.init(name, false);
     Pair<Path, Batfish> pair =
         BatfishUtil.getBatfishFromConfiguration(
@@ -60,7 +63,45 @@ public class Main {
         batfish, pair.getKey(), true, true, true, true, true, false, false);
   }
 
+  public static void zooFromVSB(String name) {
+    Map<String, String> vsbs = TopologyZoo.synthesizeCiscoConfigurations(name, false, null);
+    Pair<Path, Batfish> pair =
+        BatfishUtil.getBatfishFromTestrigText(
+            BatfishUtil.OUTPUT_BASE, name, BatfishUtil.timestamp(), vsbs, null, false);
+    Batfish batfish = pair.getRight();
+    batfish.computeDataPlane(batfish.getSnapshot());
+    ResultPrinter.printSnapshotResult(
+        batfish, pair.getKey(), true, true, true, true, true, false, false);
+  }
+
+  public static void example() {
+    Map<String, String> configurations = new TreeMap<>();
+    Path folder = Paths.get("/Users/wangdan/ANTS/batfish/networks/example/candidate/configs");
+    for (String name : Objects.requireNonNull(folder.toFile().list())) {
+      try (BufferedReader br = new BufferedReader(new FileReader(folder.resolve(name).toFile()))) {
+        configurations.put(name.split("\\.")[0], br.lines().collect(Collectors.joining("\n")));
+      } catch (Exception e) {
+        LOGGER.error(e);
+      }
+    }
+    Pair<Path, Batfish> pair =
+        BatfishUtil.getBatfishFromTestrigText(
+            BatfishUtil.OUTPUT_BASE.getParent(),
+            "example",
+            BatfishUtil.timestamp(),
+            configurations,
+            null,
+            false);
+    Batfish batfish = pair.getRight();
+    batfish.computeDataPlane(batfish.getSnapshot());
+    ResultPrinter.printSnapshotResult(
+        batfish, pair.getKey(), true, true, true, false, false, false, false);
+  }
+
   public static void main(String[] args) {
-    zoo("Aconet");
+    zooFromVSB("Aconet");
+    // example();
+    TopologyZoo.synthesizeCiscoConfigurations(
+        "Aconet", false, Paths.get("/Users/wangdan/ANTS/expresso/networks/aconet"));
   }
 }
