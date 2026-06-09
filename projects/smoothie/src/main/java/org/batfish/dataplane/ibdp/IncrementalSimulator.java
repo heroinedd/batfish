@@ -62,15 +62,12 @@ public class IncrementalSimulator {
         topologyContext.getBgpTopology().getGraph();
     MutableValueGraph<BgpPeerConfigId, BgpSessionProperties> newGraph =
         ValueGraphBuilder.directed().allowsSelfLoops(false).build();
-    for (EndpointPair<BgpPeerConfigId> edge : originalGraph.edges()) {
-      Optional<BgpSession> opt =
-          Arrays.stream(sessions)
-              .filter(
-                  session -> edge.source().equals(session.id1) && edge.target().equals(session.id2))
-              .findAny();
-      if (opt.isEmpty() || opt.get().properties != null)
-        newGraph.putEdgeValue(
-            edge, opt.isEmpty() ? originalGraph.edgeValue(edge).get() : opt.get().properties);
+    originalGraph
+        .edges()
+        .forEach(edge -> newGraph.putEdgeValue(edge, originalGraph.edgeValue(edge).get()));
+    for (BgpSession session : sessions) {
+      if (session.properties == null) newGraph.removeEdge(session.id1, session.id2);
+      else newGraph.putEdgeValue(session.id1, session.id2, session.properties);
     }
     TopologyContext updatedTopologyContext =
         topologyContext.toBuilder().setBgpTopology(new BgpTopology(newGraph)).build();
