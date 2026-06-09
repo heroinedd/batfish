@@ -85,7 +85,7 @@ public class TraceExecutor {
 
   private void executeStep(List<TraceAction> actions, boolean isUndo) {
     for (TraceAction action : actions) {
-      LOGGER.error((isUndo ? "Undo " : "") + action.toString());
+      LOGGER.info((isUndo ? "Undo " : "") + action.toString());
       if (action instanceof TraceAction.Remove) {
         TraceAction.ConfigExpr expr = ((TraceAction.Remove) action).expr;
         if (expr instanceof TraceAction.ConfigExpr.BgpSession) {
@@ -100,8 +100,6 @@ public class TraceExecutor {
             // Undo Remove: restore both directions (look up init cache)
             simulator.insertOrRemoveBgpSessionAndSimulate(fwd, rev);
           }
-        } else if (expr instanceof TraceAction.ConfigExpr.IgpLinkWeight) {
-          executeIgpUpdate((TraceAction.ConfigExpr.IgpLinkWeight) expr);
         } else {
           LOGGER.warn("Skipping unsupported Remove expr: {}", expr.getClass().getSimpleName());
         }
@@ -120,8 +118,6 @@ public class TraceExecutor {
             simulator.insertOrRemoveBgpSessionAndSimulate(
                 new BgpSession(fwd.id1, fwd.id2, null), new BgpSession(rev.id1, rev.id2, null));
           }
-        } else if (expr instanceof TraceAction.ConfigExpr.IgpLinkWeight) {
-          executeIgpUpdate((TraceAction.ConfigExpr.IgpLinkWeight) expr);
         } else {
           LOGGER.warn("Skipping unsupported Insert expr: {}", expr.getClass().getSimpleName());
         }
@@ -152,10 +148,12 @@ public class TraceExecutor {
                 new BgpSession(oldRev.id1, oldRev.id2, oldRev.properties));
           }
         } else if (update.from instanceof TraceAction.ConfigExpr.IgpLinkWeight) {
-          executeIgpUpdate(
-              isUndo
-                  ? (TraceAction.ConfigExpr.IgpLinkWeight) update.from
-                  : (TraceAction.ConfigExpr.IgpLinkWeight) update.to);
+          TraceAction.ConfigExpr.IgpLinkWeight from =
+              (TraceAction.ConfigExpr.IgpLinkWeight) update.from;
+          TraceAction.ConfigExpr.IgpLinkWeight to =
+              (TraceAction.ConfigExpr.IgpLinkWeight) update.to;
+          // When undoing, the ratio is inverted: restore from by applying (from/to) ratio
+          executeIgpUpdate(isUndo ? to : from, isUndo ? from : to);
         } else {
           LOGGER.warn(
               "Skipping unsupported Update expr: {}", update.from.getClass().getSimpleName());
@@ -164,12 +162,20 @@ public class TraceExecutor {
     }
   }
 
-  private void executeIgpUpdate(TraceAction.ConfigExpr.IgpLinkWeight expr) {
-    String srcHostname = toHostname(expr.source);
-    String tgtHostname = toHostname(expr.target);
+  /**
+   * Applies an IGP link weight update using a ratio: {@code newWeight = currentWeight * (to /
+   * from)}. This handles cases where the absolute weight in the trace differs from the actual
+   * current weight (e.g., after prior incremental changes).
+   */
+  private void executeIgpUpdate(
+      TraceAction.ConfigExpr.IgpLinkWeight from, TraceAction.ConfigExpr.IgpLinkWeight to) {
+    String srcHostname = toHostname(from.source);
+    String tgtHostname = toHostname(from.target);
     for (Edge edge : simulator.getLayer3Topology().getEdges()) {
       if (edge.getNode1().equals(srcHostname) && edge.getNode2().equals(tgtHostname)) {
-        simulator.modifyOspfLinkWeightAndSimulate(edge, (int) expr.weight);
+        int current = simulator.getOspfLinkWeight(edge);
+        int updated = (int) (current * (to.weight / from.weight));
+        simulator.modifyOspfLinkWeightAndSimulate(edge, updated);
         return;
       }
     }

@@ -206,13 +206,13 @@ public class IncrementalSimulator {
                       .collect(Collectors.toCollection(HashSet::new));
 
               if (!added.isEmpty() || !removed.isEmpty()) {
-                LOGGER.error("[RIB diff] {}/{}", hostname, vrfName);
-                added.forEach(r -> LOGGER.error("  + {}", r));
-                removed.forEach(r -> LOGGER.error("  - {}", r));
+                LOGGER.info("[RIB diff] {}/{}", hostname, vrfName);
+                added.forEach(r -> LOGGER.info("  + {}", r));
+                removed.forEach(r -> LOGGER.info("  - {}", r));
                 identical[0] = false;
               }
             });
-    if (identical[0]) LOGGER.error("[RIB diff] none");
+    if (identical[0]) LOGGER.info("[RIB diff] none");
   }
 
   public int getOspfLinkWeight(Edge edge) {
