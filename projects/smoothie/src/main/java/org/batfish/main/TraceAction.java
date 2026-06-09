@@ -31,6 +31,11 @@ public abstract class TraceAction {
         this.target = target;
         this.weight = weight;
       }
+
+      @Override
+      public String toString() {
+        return "IgpLinkWeight(" + source + " → " + target + ", weight=" + weight + ")";
+      }
     }
 
     public static class BgpSession extends ConfigExpr {
@@ -42,6 +47,11 @@ public abstract class TraceAction {
         this.source = source;
         this.target = target;
         this.sessionType = sessionType;
+      }
+
+      @Override
+      public String toString() {
+        return "BgpSession(" + source + " → " + target + ", " + sessionType + ")";
       }
     }
 
@@ -55,6 +65,11 @@ public abstract class TraceAction {
         this.direction = direction;
         this.map = map;
       }
+
+      @Override
+      public String toString() {
+        return "BgpRouteMap(router=" + router + ", " + direction + ", map=" + map + ")";
+      }
     }
 
     public static class StaticRoute extends ConfigExpr {
@@ -66,6 +81,11 @@ public abstract class TraceAction {
         this.router = router;
         this.prefix = prefix;
         this.target = target;
+      }
+
+      @Override
+      public String toString() {
+        return "StaticRoute(router=" + router + ", " + prefix + " → " + target + ")";
       }
     }
   }
@@ -80,6 +100,11 @@ public abstract class TraceAction {
     public Insert(ConfigExpr expr) {
       this.expr = expr;
     }
+
+    @Override
+    public String toString() {
+      return "Insert(" + expr + ")";
+    }
   }
 
   public static class Remove extends TraceAction {
@@ -87,6 +112,11 @@ public abstract class TraceAction {
 
     public Remove(ConfigExpr expr) {
       this.expr = expr;
+    }
+
+    @Override
+    public String toString() {
+      return "Remove(" + expr + ")";
     }
   }
 
@@ -97,6 +127,11 @@ public abstract class TraceAction {
     public Update(ConfigExpr from, ConfigExpr to) {
       this.from = from;
       this.to = to;
+    }
+
+    @Override
+    public String toString() {
+      return "Update(" + from + " → " + to + ")";
     }
   }
 

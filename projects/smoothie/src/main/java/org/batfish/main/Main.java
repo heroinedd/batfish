@@ -27,8 +27,10 @@ public class Main {
         Paths.get(System.getProperty("user.home"))
             .resolve("ANTS/snowcap/smoothie/zoo/traces")
             .resolve(name + "-FM2RR.json");
-    List<TraceParser.Step> steps = TraceParser.parse(tracePath);
-    LOGGER.error("Loaded {} steps from trace", steps.size());
+    Pair<List<Integer>, List<TraceParser.Step>> parsed = TraceParser.parse(tracePath);
+    List<Integer> reflectors = parsed.getLeft();
+    List<TraceParser.Step> steps = parsed.getRight();
+    LOGGER.info("Loaded {} steps from trace, reflectors: {}", steps.size(), reflectors);
 
     Map<String, Configuration> initialConfigs = TopologyZoo.init(name, true, null);
     Pair<Path, Batfish> initialPair =
@@ -38,7 +40,7 @@ public class Main {
     IncrementalSimulator simulator = new IncrementalSimulator(initialBatfish);
     simulator.computeInitialDataPlane();
 
-    Map<String, Configuration> finalConfigs = TopologyZoo.init(name, false, 7);
+    Map<String, Configuration> finalConfigs = TopologyZoo.init(name, false, reflectors.get(0));
     Pair<Path, Batfish> finalPair =
         BatfishUtil.getBatfishFromConfiguration(
             BatfishUtil.OUTPUT_BASE, name + "-final", new TreeMap<>(finalConfigs), null, false);

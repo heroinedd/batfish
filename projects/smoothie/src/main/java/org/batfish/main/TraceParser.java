@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * Parses a Snowcap trace file (JSON) into a list of {@link Step}s.
@@ -30,15 +31,20 @@ public class TraceParser {
   }
 
   /**
-   * Parses the trace file at {@code path} and returns all steps in order. {@code solution} events
-   * are skipped.
+   * Parses the trace file at {@code path} and returns a pair of (reflector IDs, steps). {@code
+   * solution} events are skipped.
    */
-  public static List<Step> parse(Path path) throws IOException {
+  public static Pair<List<Integer>, List<Step>> parse(Path path) throws IOException {
     ObjectMapper mapper = new ObjectMapper();
     JsonNode root = mapper.readTree(path.toFile());
 
+    List<Integer> reflectors = new ArrayList<>();
+    for (JsonNode id : root.get("reflector")) {
+      reflectors.add(id.asInt());
+    }
+
     List<Step> steps = new ArrayList<>();
-    for (JsonNode event : root) {
+    for (JsonNode event : root.get("trace")) {
       String eventType = event.get("event").asText();
       switch (eventType) {
         case "attempt":
@@ -63,7 +69,7 @@ public class TraceParser {
           break; // skip "solution" and any unknown events
       }
     }
-    return steps;
+    return Pair.of(reflectors, steps);
   }
 
   private static TraceAction parseAction(JsonNode node) {

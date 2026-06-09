@@ -27,6 +27,7 @@ import java.util.Set;
  * </ul>
  *
  * <p>Cache selection per action/direction:
+ *
  * <pre>
  *   forward Insert(x)      → add    x  from finalCache
  *   forward Remove(x)      → remove x  from initCache
@@ -84,21 +85,19 @@ public class TraceExecutor {
 
   private void executeStep(List<TraceAction> actions, boolean isUndo) {
     for (TraceAction action : actions) {
+      LOGGER.error((isUndo ? "Undo " : "") + action.toString());
       if (action instanceof TraceAction.Remove) {
         TraceAction.ConfigExpr expr = ((TraceAction.Remove) action).expr;
         if (expr instanceof TraceAction.ConfigExpr.BgpSession) {
           TraceAction.ConfigExpr.BgpSession bgp = (TraceAction.ConfigExpr.BgpSession) expr;
+          BgpSession fwd = lookupSession(initSessionCache, bgp.source, bgp.target);
+          BgpSession rev = lookupSession(initSessionCache, bgp.target, bgp.source);
           if (!isUndo) {
             // Forward Remove: take both directions out of the network (look up init cache)
-            BgpSession fwd = lookupSession(initSessionCache, bgp.source, bgp.target);
-            BgpSession rev = lookupSession(initSessionCache, bgp.target, bgp.source);
             simulator.insertOrRemoveBgpSessionAndSimulate(
-                new BgpSession(fwd.id1, fwd.id2, null),
-                new BgpSession(rev.id1, rev.id2, null));
+                new BgpSession(fwd.id1, fwd.id2, null), new BgpSession(rev.id1, rev.id2, null));
           } else {
             // Undo Remove: restore both directions (look up init cache)
-            BgpSession fwd = lookupSession(initSessionCache, bgp.source, bgp.target);
-            BgpSession rev = lookupSession(initSessionCache, bgp.target, bgp.source);
             simulator.insertOrRemoveBgpSessionAndSimulate(fwd, rev);
           }
         } else if (expr instanceof TraceAction.ConfigExpr.IgpLinkWeight) {
@@ -111,18 +110,15 @@ public class TraceExecutor {
         TraceAction.ConfigExpr expr = ((TraceAction.Insert) action).expr;
         if (expr instanceof TraceAction.ConfigExpr.BgpSession) {
           TraceAction.ConfigExpr.BgpSession bgp = (TraceAction.ConfigExpr.BgpSession) expr;
+          BgpSession fwd = lookupSession(finalSessionCache, bgp.source, bgp.target);
+          BgpSession rev = lookupSession(finalSessionCache, bgp.target, bgp.source);
           if (!isUndo) {
             // Forward Insert: add both directions (look up final cache)
-            BgpSession fwd = lookupSession(finalSessionCache, bgp.source, bgp.target);
-            BgpSession rev = lookupSession(finalSessionCache, bgp.target, bgp.source);
             simulator.insertOrRemoveBgpSessionAndSimulate(fwd, rev);
           } else {
             // Undo Insert: remove both directions (look up final cache)
-            BgpSession fwd = lookupSession(finalSessionCache, bgp.source, bgp.target);
-            BgpSession rev = lookupSession(finalSessionCache, bgp.target, bgp.source);
             simulator.insertOrRemoveBgpSessionAndSimulate(
-                new BgpSession(fwd.id1, fwd.id2, null),
-                new BgpSession(rev.id1, rev.id2, null));
+                new BgpSession(fwd.id1, fwd.id2, null), new BgpSession(rev.id1, rev.id2, null));
           }
         } else if (expr instanceof TraceAction.ConfigExpr.IgpLinkWeight) {
           executeIgpUpdate((TraceAction.ConfigExpr.IgpLinkWeight) expr);
@@ -136,12 +132,12 @@ public class TraceExecutor {
           TraceAction.ConfigExpr.BgpSession fromBgp =
               (TraceAction.ConfigExpr.BgpSession) update.from;
           TraceAction.ConfigExpr.BgpSession toBgp = (TraceAction.ConfigExpr.BgpSession) update.to;
+          BgpSession oldFwd = lookupSession(initSessionCache, fromBgp.source, fromBgp.target);
+          BgpSession oldRev = lookupSession(initSessionCache, fromBgp.target, fromBgp.source);
+          BgpSession newFwd = lookupSession(finalSessionCache, toBgp.source, toBgp.target);
+          BgpSession newRev = lookupSession(finalSessionCache, toBgp.target, toBgp.source);
           if (!isUndo) {
             // Forward Update: remove old both directions (init), add new both directions (final)
-            BgpSession oldFwd = lookupSession(initSessionCache, fromBgp.source, fromBgp.target);
-            BgpSession oldRev = lookupSession(initSessionCache, fromBgp.target, fromBgp.source);
-            BgpSession newFwd = lookupSession(finalSessionCache, toBgp.source, toBgp.target);
-            BgpSession newRev = lookupSession(finalSessionCache, toBgp.target, toBgp.source);
             simulator.insertOrRemoveBgpSessionAndSimulate(
                 new BgpSession(oldFwd.id1, oldFwd.id2, null),
                 new BgpSession(oldRev.id1, oldRev.id2, null),
@@ -149,10 +145,6 @@ public class TraceExecutor {
                 new BgpSession(newRev.id1, newRev.id2, newRev.properties));
           } else {
             // Undo Update: remove new both directions (final), restore old both directions (init)
-            BgpSession newFwd = lookupSession(finalSessionCache, toBgp.source, toBgp.target);
-            BgpSession newRev = lookupSession(finalSessionCache, toBgp.target, toBgp.source);
-            BgpSession oldFwd = lookupSession(initSessionCache, fromBgp.source, fromBgp.target);
-            BgpSession oldRev = lookupSession(initSessionCache, fromBgp.target, fromBgp.source);
             simulator.insertOrRemoveBgpSessionAndSimulate(
                 new BgpSession(newFwd.id1, newFwd.id2, null),
                 new BgpSession(newRev.id1, newRev.id2, null),
