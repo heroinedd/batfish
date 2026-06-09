@@ -96,7 +96,7 @@ final class IncrementalBdpEngine {
   private static final int MAX_TOPOLOGY_ITERATIONS = 10;
 
   private int _numIterations;
-  private final IncrementalDataPlaneSettings _settings;
+  final IncrementalDataPlaneSettings _settings;
 
   IncrementalBdpEngine(IncrementalDataPlaneSettings settings) {
     _settings = settings;
@@ -107,7 +107,7 @@ final class IncrementalBdpEngine {
    * ForwardingAnalysis, and other internals are recomputed based on the updated state in the {@code
    * nodes} and {@code vrs}.
    */
-  private PartialDataplane nextDataplane(
+  PartialDataplane nextDataplane(
       TopologyContext currentTopologyContext,
       SortedMap<String, Node> nodes,
       List<VirtualRouter> vrs,
@@ -458,7 +458,8 @@ final class IncrementalBdpEngine {
             .setNodes(nodes)
             .setPartialDataplane(currentDataplane)
             .build();
-    return new IbdpResult(answerElement, finalDataplane, currentTopologyContext, nodes);
+    return new IbdpResult(
+        answerElement, finalDataplane, currentTopologyContext, nodes, currentIpOwners);
   }
 
   private @Nonnull Table<String, TrackRoute, Boolean> nextTrackRouteResults(
@@ -748,7 +749,7 @@ final class IncrementalBdpEngine {
     vrs.parallelStream().forEach(VirtualRouter::updateLayer3Vnis);
   }
 
-  private static void computeIterationOfBgpRoutes(
+  static void computeIterationOfBgpRoutes(
       String iterationLabel, Map<String, Node> allNodes, List<VirtualRouter> vrs) {
     LOGGER.info("{}: Init for new BGP iteration", iterationLabel);
     vrs.parallelStream().forEach(vr -> vr.bgpIteration(allNodes));
@@ -789,7 +790,7 @@ final class IncrementalBdpEngine {
    * @param topologyContext The topology context in which various adjacencies are stored
    * @param ae The output answer element in which to store a report of the computation. Also
    */
-  private void computeIgpDataPlane(
+  void computeIgpDataPlane(
       SortedMap<String, Node> nodes,
       List<VirtualRouter> vrs,
       TopologyContext topologyContext,

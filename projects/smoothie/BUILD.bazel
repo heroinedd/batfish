@@ -13,6 +13,24 @@ java_binary(
         "//projects/batfish/src/main/java/org/batfish",
         "@maven//:com_google_code_findbugs_jsr305",
         "@maven//:com_google_code_gson_gson",
+        "@maven//:com_google_guava_guava",
+        "@maven//:org_apache_commons_commons_lang3",
+        "@maven//:org_apache_logging_log4j_log4j_api",
+        "@maven//:org_jgrapht_jgrapht_core",
+        "@maven//:org_jgrapht_jgrapht_io",
+    ],
+)
+
+java_binary(
+    name = "network-factory",
+    srcs = ["src/main/java/org/batfish/main/NetworkFactory.java"],
+    main_class = "org.batfish.main.NetworkFactory",
+    deps = [
+        ":smoothie",
+        "//projects/batfish-common-protocol/src/main/java:common_lib",
+        "//projects/batfish/src/main/java/org/batfish",
+        "@maven//:com_google_code_findbugs_jsr305",
+        "@maven//:com_google_code_gson_gson",
         "@maven//:org_apache_commons_commons_lang3",
         "@maven//:org_apache_logging_log4j_log4j_api",
         "@maven//:org_jgrapht_jgrapht_core",

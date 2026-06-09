@@ -84,6 +84,8 @@ import org.batfish.datamodel.OriginMechanism;
 import org.batfish.datamodel.OriginType;
 import org.batfish.datamodel.Prefix;
 import org.batfish.datamodel.PrefixTrieMultiMap;
+import org.batfish.datamodel.ReceivedFrom;
+import org.batfish.datamodel.ReceivedFromInterface;
 import org.batfish.datamodel.ReceivedFromIp;
 import org.batfish.datamodel.ReceivedFromSelf;
 import org.batfish.datamodel.ResolutionRestriction;
@@ -644,6 +646,77 @@ final class BgpRoutingProcess implements RoutingProcess<BgpTopology, BgpRoute<?,
     }
     _topology = topology;
     // TODO: compute edges that went down, remove routes we received from those neighbors
+    // Compute edges that went down
+    Set<EdgeId> unicastEdgesWentDown =
+        Sets.difference(
+            getEdgeIdStream(
+                    oldTopology.getGraph(),
+                    BgpPeerConfig::getIpv4UnicastAddressFamily,
+                    Type.IPV4_UNICAST)
+                .collect(ImmutableSet.toImmutableSet()),
+            getEdgeIdStream(
+                    topology.getGraph(),
+                    BgpPeerConfig::getIpv4UnicastAddressFamily,
+                    Type.IPV4_UNICAST)
+                .collect(ImmutableSet.toImmutableSet()));
+
+    // Remove routes from neighbors that went down
+    unicastEdgesWentDown.forEach(this::removeRoutesFromSession);
+  }
+
+  public void removeRoutesFromSession(EdgeId edgeId) {
+    // Get the remote side of this session
+    BgpPeerConfigId configId = edgeId.head();
+    // Session's IP. Only regular sessions have this
+    Prefix sessionPrefix = configId.getRemotePeerPrefix();
+    // Session's interface. Only unnumbered sessions have this
+    String sessionInterface = configId.getPeerInterface();
+
+    Function<Bgpv4Route, Boolean> filter =
+        route -> {
+          ReceivedFrom receivedFrom = route.getReceivedFrom();
+
+          if (receivedFrom instanceof ReceivedFromIp) {
+            // Route received from a regular BGP peer session
+            Ip routeIp = ((ReceivedFromIp) receivedFrom).getIp();
+            // If this route is received from an IP inside sessionPrefix, remove it
+            return sessionPrefix.containsIp(routeIp);
+          } else if (receivedFrom instanceof ReceivedFromInterface) {
+            // Route received from an unnumbered session
+            String routeInterface = ((ReceivedFromInterface) receivedFrom).getInterface();
+            // If this route is received from the unnumbered session's interface, remove it
+            return sessionInterface.equals(routeInterface);
+          }
+
+          // Don't remove locally originated routes
+          return false;
+        };
+
+    // Within eBGP RIB, filter out routes that was received from this session
+    Set<Bgpv4Route> routesToRemove =
+        _ebgpv4Rib.getRoutes().stream()
+            .filter(filter::apply)
+            .collect(ImmutableSet.toImmutableSet());
+
+    // Remove from eBGP RIB
+    routesToRemove.forEach(
+        route -> {
+          processRemoveInEbgpOrIbgpRib(route, true); // true for eBGP
+          processRemoveInBgpRib(route);
+        });
+
+    // Similar filtering for iBGP RIB
+    Set<Bgpv4Route> ibgpRoutesToRemove =
+        _ibgpv4Rib.getRoutes().stream()
+            .filter(filter::apply)
+            .collect(ImmutableSet.toImmutableSet());
+
+    // Remove from iBGP RIB
+    ibgpRoutesToRemove.forEach(
+        route -> {
+          processRemoveInEbgpOrIbgpRib(route, false); // false for iBGP
+          processRemoveInBgpRib(route);
+        });
   }
 
   @Override
@@ -2056,7 +2129,7 @@ final class BgpRoutingProcess implements RoutingProcess<BgpTopology, BgpRoute<?,
    * @param ebgp Whether to modify the eBGP RIB (if false, modifies the iBGP RIB)
    * @param merge Whether to merge the given route (if false, removes it)
    */
-  private RibDelta<Bgpv4Route> processMergeOrRemoveInEbgpOrIbgpRib(
+  RibDelta<Bgpv4Route> processMergeOrRemoveInEbgpOrIbgpRib(
       Bgpv4Route route, boolean ebgp, boolean merge) {
     if (ebgp) {
       return processMergeOrRemove(
@@ -2089,7 +2162,7 @@ final class BgpRoutingProcess implements RoutingProcess<BgpTopology, BgpRoute<?,
    *
    * @param merge Whether to merge the given route (if false, removes it)
    */
-  private RibDelta<Bgpv4Route> processMergeOrRemoveInBgpRib(Bgpv4Route route, boolean merge) {
+  RibDelta<Bgpv4Route> processMergeOrRemoveInBgpRib(Bgpv4Route route, boolean merge) {
     return processMergeOrRemove(
         _bgpv4Rib, route, _bgpv4DeltaBuilder, _bgpv4DeltaBestPathBuilder, merge);
   }

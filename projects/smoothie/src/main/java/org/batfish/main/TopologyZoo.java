@@ -6,6 +6,7 @@ import org.batfish.utils.ConfigUtil;
 import org.batfish.utils.GmlUtil;
 import org.jgrapht.graph.SimpleWeightedGraph;
 
+import javax.annotation.Nullable;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.nio.file.Path;
@@ -19,7 +20,7 @@ public class TopologyZoo {
   private static final long INT_ASN = 55990;
   private static final long EXT_ASN = 10000;
 
-  public static Map<String, Configuration> init(String name, boolean fullMesh) {
+  public static Map<String, Configuration> init(String name, boolean fullMesh, Integer rrId) {
     SimpleWeightedGraph<GmlUtil.Node, GmlUtil.Edge> g = GmlUtil.readTopology(name, -1);
 
     Map<Integer, Configuration> configurations = new TreeMap<>();
@@ -64,13 +65,7 @@ public class TopologyZoo {
         }
       }
     } else {
-      int rr =
-          g.vertexSet().stream()
-              .filter(v -> !externals.contains(v.getId()))
-              .sorted(Comparator.comparing(v -> g.degreeOf((GmlUtil.Node) v)).reversed())
-              .iterator()
-              .next()
-              .getId();
+      int rr = rrId == null ? getRouteReflector(name, g) : rrId;
       for (int client : configurations.keySet()) {
         if (!externals.contains(client) && client != rr) {
           iBgpSession(configurations.get(rr), configurations.get(client), INT_ASN, true);
@@ -328,5 +323,17 @@ public class TopologyZoo {
 
   private static String loopbackIp(int id) {
     return String.format("1.%d.%d.%d/32", id, id, id);
+  }
+
+  public static int getRouteReflector(
+      String name, @Nullable SimpleWeightedGraph<GmlUtil.Node, GmlUtil.Edge> graph) {
+    SimpleWeightedGraph<GmlUtil.Node, GmlUtil.Edge> g =
+        graph != null ? graph : GmlUtil.readTopology(name, -1);
+    Set<GmlUtil.Node> set =
+        g.vertexSet().stream()
+            .filter(GmlUtil.Node::isInternal)
+            .sorted(Comparator.comparing(v -> g.degreeOf((GmlUtil.Node) v)).reversed())
+            .collect(Collectors.toSet());
+    return set.stream().iterator().next().getId();
   }
 }

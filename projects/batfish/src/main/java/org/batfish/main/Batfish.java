@@ -739,7 +739,7 @@ public class Batfish extends PluginConsumer implements IBatfish {
 
   /* Write the dataplane to disk and cache, and write the answer element to disk.
    */
-  private void saveDataPlane(
+  public void saveDataPlane(
       NetworkSnapshot snapshot, DataPlane dataplane, TopologyContainer topologies) {
     _cachedDataPlanes.put(snapshot, dataplane);
 

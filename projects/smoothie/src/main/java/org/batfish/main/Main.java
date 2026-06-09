@@ -4,104 +4,81 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.batfish.datamodel.Configuration;
+import org.batfish.datamodel.Edge;
+import org.batfish.datamodel.bgp.BgpTopology;
+import org.batfish.dataplane.ibdp.IncrementalSimulator;
 import org.batfish.utils.BatfishUtil;
-import org.batfish.utils.GmlUtil;
-import org.batfish.utils.ResultPrinter;
-import org.jgrapht.graph.SimpleGraph;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
-import java.util.stream.Collectors;
-
-import static org.batfish.utils.GmlUtil.readTopology;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 public class Main {
   private static final Logger LOGGER = LogManager.getLogger(Main.class);
 
-  public static void gml() {
-    Path path = Paths.get("networks", "topology-zoo");
-    List<GmlUtil.GraphAttributes> attrs = new LinkedList<>();
-    for (File file :
-        Arrays.stream(Objects.requireNonNull(path.toFile().listFiles())).sorted().toList()) {
-      try {
-        Path gml = file.toPath().resolve(file.getName() + ".gml");
-        Path weights = file.toPath().resolve(file.getName() + ".json");
-        SimpleGraph<GmlUtil.Node, GmlUtil.Edge> g = readTopology(gml, weights, 0);
-        List<Integer> degrees = g.vertexSet().stream().map(g::degreeOf).sorted().toList();
-        int minDegree = degrees.get(0);
-        int maxDegree = degrees.get(degrees.size() - 1);
-        int avgDegree = degrees.stream().reduce(0, Integer::sum) / degrees.size();
-        attrs.add(
-            new GmlUtil.GraphAttributes(
-                file.getName(),
-                g.vertexSet().size(),
-                g.edgeSet().size(),
-                minDegree,
-                maxDegree,
-                avgDegree,
-                (int) g.vertexSet().stream().filter(v -> !v.isInternal()).count()));
-      } catch (Exception e) {
-        LOGGER.error("{} error: {}", file.getName(), e);
-      }
-    }
-    attrs.stream().sorted().forEach(System.out::println);
+  public static void fm2rr(String name) throws IOException {
+    long start = System.nanoTime();
+    LOGGER.error("{}-fm2rr starts", name);
+
+    Path tracePath =
+        Paths.get(System.getProperty("user.home"))
+            .resolve("ANTS/snowcap/smoothie/zoo/traces")
+            .resolve(name + "-FM2RR.json");
+    List<TraceParser.Step> steps = TraceParser.parse(tracePath);
+    LOGGER.error("Loaded {} steps from trace", steps.size());
+
+    Map<String, Configuration> initialConfigs = TopologyZoo.init(name, true, null);
+    Pair<Path, Batfish> initialPair =
+        BatfishUtil.getBatfishFromConfiguration(
+            BatfishUtil.OUTPUT_BASE, name + "-initial", new TreeMap<>(initialConfigs), null, false);
+    Batfish initialBatfish = initialPair.getRight();
+    IncrementalSimulator simulator = new IncrementalSimulator(initialBatfish);
+    simulator.computeInitialDataPlane();
+
+    Map<String, Configuration> finalConfigs = TopologyZoo.init(name, false, 7);
+    Pair<Path, Batfish> finalPair =
+        BatfishUtil.getBatfishFromConfiguration(
+            BatfishUtil.OUTPUT_BASE, name + "-final", new TreeMap<>(finalConfigs), null, false);
+    Batfish finalBatfish = finalPair.getRight();
+    finalBatfish.computeDataPlane(finalBatfish.getSnapshot());
+    BgpTopology finalBgpTopology =
+        finalBatfish.getTopologyProvider().getBgpTopology(finalBatfish.getSnapshot());
+
+    TraceExecutor executor = new TraceExecutor(simulator, initialBatfish, finalBgpTopology);
+    executor.execute(steps);
+
+    // simulator.checkSafety();
+    LOGGER.error("{}-fm2rr finish in {}s", name, (System.nanoTime() - start) / 1e9);
   }
 
-  public static void zooFromVI(String name) {
-    Map<String, Configuration> configurations = TopologyZoo.init(name, false);
+  public static void igpx2(String name) {
+    long start = System.nanoTime();
+    LOGGER.info("{}-igpx2 starts", name);
+
+    Map<String, Configuration> iConfigs = TopologyZoo.init(name, false, null);
     Pair<Path, Batfish> pair =
         BatfishUtil.getBatfishFromConfiguration(
-            BatfishUtil.OUTPUT_BASE, name, new TreeMap<>(configurations), null, false);
+            BatfishUtil.OUTPUT_BASE, name, new TreeMap<>(iConfigs), null, false);
     Batfish batfish = pair.getRight();
-    batfish.computeDataPlane(batfish.getSnapshot());
-    // DataPlane dp = batfish.loadDataPlane(batfish.getSnapshot());
-    ResultPrinter.printSnapshotResult(
-        batfish, pair.getKey(), true, true, true, true, true, false, false);
-  }
+    IncrementalSimulator simulator = new IncrementalSimulator(batfish);
 
-  public static void zooFromVSB(String name) {
-    Map<String, String> vsbs = TopologyZoo.synthesizeCiscoConfigurations(name, false, null);
-    Pair<Path, Batfish> pair =
-        BatfishUtil.getBatfishFromTestrigText(
-            BatfishUtil.OUTPUT_BASE, name, BatfishUtil.timestamp(), vsbs, null, false);
-    Batfish batfish = pair.getRight();
-    batfish.computeDataPlane(batfish.getSnapshot());
-    ResultPrinter.printSnapshotResult(
-        batfish, pair.getKey(), true, true, true, true, true, false, false);
-  }
-
-  public static void example() {
-    Map<String, String> configurations = new TreeMap<>();
-    Path folder = Paths.get("/Users/wangdan/ANTS/batfish/networks/example/candidate/configs");
-    for (String name : Objects.requireNonNull(folder.toFile().list())) {
-      try (BufferedReader br = new BufferedReader(new FileReader(folder.resolve(name).toFile()))) {
-        configurations.put(name.split("\\.")[0], br.lines().collect(Collectors.joining("\n")));
-      } catch (Exception e) {
-        LOGGER.error(e);
-      }
+    // initial data plane
+    simulator.computeInitialDataPlane();
+    for (Edge edge : simulator.getLayer3Topology().getEdges()) {
+      if (edge.getNode1().contains("er") || edge.getNode2().contains("er")) continue;
+      LOGGER.info("doubling link weight for {}", edge);
+      simulator.modifyOspfLinkWeightAndSimulate(edge, simulator.getOspfLinkWeight(edge) * 2);
+      // simulator.checkSafety();
     }
-    Pair<Path, Batfish> pair =
-        BatfishUtil.getBatfishFromTestrigText(
-            BatfishUtil.OUTPUT_BASE.getParent(),
-            "example",
-            BatfishUtil.timestamp(),
-            configurations,
-            null,
-            false);
-    Batfish batfish = pair.getRight();
-    batfish.computeDataPlane(batfish.getSnapshot());
-    ResultPrinter.printSnapshotResult(
-        batfish, pair.getKey(), true, true, true, false, false, false, false);
+
+    LOGGER.error("{}-igpx2 finish in {}s", name, (System.nanoTime() - start) / 1e9);
   }
 
-  public static void main(String[] args) {
-    zooFromVSB("Aconet");
-    // example();
-    TopologyZoo.synthesizeCiscoConfigurations(
-        "Aconet", false, Paths.get("/Users/wangdan/ANTS/expresso/networks/aconet"));
+  public static void main(String[] args) throws IOException {
+    String name = args.length > 0 ? args[0] : "Aconet";
+    fm2rr(name);
   }
 }

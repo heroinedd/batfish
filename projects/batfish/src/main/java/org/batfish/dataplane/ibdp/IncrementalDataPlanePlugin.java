@@ -71,4 +71,8 @@ public final class IncrementalDataPlanePlugin extends DataPlanePlugin {
   public String getName() {
     return PLUGIN_NAME;
   }
+
+  IncrementalBdpEngine getEngine() {
+    return _engine;
+  }
 }

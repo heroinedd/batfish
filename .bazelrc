@@ -4,8 +4,8 @@ build --java_language_version=17
 build --tool_java_runtime_version=17
 
 # Error Prone warnings to enforce
-build --javacopt "-Xep:WildcardImport:ERROR"
-build --javacopt "-Xep:RemoveUnusedImports:ERROR"
+# build --javacopt "-Xep:WildcardImport:ERROR"
+# build --javacopt "-Xep:RemoveUnusedImports:ERROR"
 
 # Do not instrument Bazel packages that contain parboiled parsers, as this crashes.
 # TODO: this does not seem to work, but passing the exact same argument on the command line

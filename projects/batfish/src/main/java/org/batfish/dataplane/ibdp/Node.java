@@ -49,7 +49,7 @@ public final class Node {
 
   /** Return the list of virtual routers at this node */
   @Nonnull
-  Collection<VirtualRouter> getVirtualRouters() {
+  public Collection<VirtualRouter> getVirtualRouters() {
     return _virtualRouters.values();
   }
 
