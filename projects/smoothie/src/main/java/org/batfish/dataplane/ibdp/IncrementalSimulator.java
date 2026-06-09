@@ -1,6 +1,5 @@
 package org.batfish.dataplane.ibdp;
 
-import com.google.common.graph.EndpointPair;
 import com.google.common.graph.MutableValueGraph;
 import com.google.common.graph.ValueGraph;
 import com.google.common.graph.ValueGraphBuilder;
@@ -100,17 +99,18 @@ public class IncrementalSimulator {
                 .get(edge.getInt1())
                 .getOspfSettings())
         .setCost(weight);
-    Objects.requireNonNull(
-            nodes
-                .get(edge.getNode2())
-                .getConfiguration()
-                .getAllInterfaces()
-                .get(edge.getInt2())
-                .getOspfSettings())
-        .setCost(weight);
     TopologyContext topologyContext = (TopologyContext) currDataPlaneResult._topologies;
 
-    // step2: re-simulation of OSPF
+    // step2: remove all OSPF routes and re-simulation of OSPF
+    vrs.parallelStream()
+        .forEach(
+            vr -> {
+              Set<AnnotatedRoute<AbstractRoute>> routes =
+                  vr.getMainRib().getRoutes().stream()
+                      .filter(route -> route.getRoute() instanceof OspfRoute)
+                      .collect(Collectors.toSet());
+              routes.forEach(route -> vr.getMainRib().removeRouteGetDelta(route));
+            });
     engine.computeIgpDataPlane(nodes, vrs, topologyContext, new IncrementalBdpAnswerElement());
 
     // step3: incremental BGP simulation
@@ -133,11 +133,6 @@ public class IncrementalSimulator {
 
     // step4: update the current data plane
     updateCurrentDataplane(nodes, vrs, topologyContext);
-  }
-
-  /** Check whether the current data plane is safe (i.e., no forwarding loops). */
-  public void checkSafety() {
-    batfish.bddLoopDetection(batfish.getSnapshot());
   }
 
   private void simulateBgp(
@@ -221,29 +216,14 @@ public class IncrementalSimulator {
   }
 
   public int getOspfLinkWeight(Edge edge) {
-    int w1 =
-        initDataPlaneResult
-            .getNodes()
-            .get(edge.getNode1())
-            .getConfiguration()
-            .getAllInterfaces()
-            .get(edge.getInt1())
-            .getOspfSettings()
-            .getCost();
-    int w2 =
-        initDataPlaneResult
-            .getNodes()
-            .get(edge.getNode2())
-            .getConfiguration()
-            .getAllInterfaces()
-            .get(edge.getInt2())
-            .getOspfSettings()
-            .getCost();
-    if (w1 == w2) {
-      return w1;
-    } else {
-      throw new IllegalStateException("Different Ospf link weight for edge " + edge);
-    }
+    return initDataPlaneResult
+        .getNodes()
+        .get(edge.getNode1())
+        .getConfiguration()
+        .getAllInterfaces()
+        .get(edge.getInt1())
+        .getOspfSettings()
+        .getCost();
   }
 
   public Topology getLayer3Topology() {
