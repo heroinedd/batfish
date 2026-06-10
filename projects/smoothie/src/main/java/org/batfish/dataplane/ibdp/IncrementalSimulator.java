@@ -11,6 +11,7 @@ import org.batfish.datamodel.bgp.BgpTopology;
 import org.batfish.dataplane.ibdp.schedule.IbdpSchedule;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.batfish.dataplane.rib.RibDelta;
 import org.batfish.main.Batfish;
 
 import java.util.*;
@@ -102,6 +103,8 @@ public class IncrementalSimulator {
     TopologyContext topologyContext = (TopologyContext) currDataPlaneResult._topologies;
 
     // step2: remove all OSPF routes and re-simulation of OSPF
+    Map<VirtualRouter, RibDelta.Builder<AnnotatedRoute<AbstractRoute>>> builders =
+        vrs.stream().collect(Collectors.toMap(vr -> vr, vr -> RibDelta.builder()));
     vrs.parallelStream()
         .forEach(
             vr -> {
@@ -109,26 +112,42 @@ public class IncrementalSimulator {
                   vr.getMainRib().getRoutes().stream()
                       .filter(route -> route.getRoute() instanceof OspfRoute)
                       .collect(Collectors.toSet());
-              routes.forEach(route -> vr.getMainRib().removeRouteGetDelta(route));
+              routes.forEach(
+                  route -> builders.get(vr).from(vr.getMainRib().removeRouteGetDelta(route)));
             });
     engine.computeIgpDataPlane(nodes, vrs, topologyContext, new IncrementalBdpAnswerElement());
-
-    // step3: incremental BGP simulation
     vrs.parallelStream()
+        .forEach(
+            vr -> {
+              vr.getMainRib().getRoutes().stream()
+                  .filter(route -> route.getRoute() instanceof OspfRoute)
+                  .forEach(route -> builders.get(vr).add(route));
+            });
+
+    Map<VirtualRouter, RibDelta<AnnotatedRoute<AbstractRoute>>> deltas =
+        builders.entrySet().stream()
+            .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().build()));
+
+    // step3: update BGP route resolution
+    vrs.stream()
         .filter(vr -> vr._bgpRoutingProcess != null)
+        .filter(vr -> !deltas.get(vr).isEmpty())
         .forEach(
             vr -> {
               BgpRoutingProcess bgp = vr.getBgpRoutingProcess();
-              Set<Bgpv4Route> routes = bgp._ibgpv4Rib.getRoutes();
-              // re-insert all previous BGP routes to find out best route changes
+              bgp.updateResolvableRoutes(deltas.get(vr));
+              Set<Bgpv4Route> routes = bgp._ibgpv4Rib.getBestPathRoutes();
+              // re-insert the previous BGP best routes to find out best route changes
               routes.forEach(
                   route -> {
+                    bgp.processMergeOrRemoveInEbgpOrIbgpRib(route, false, false);
+                    bgp.processMergeOrRemoveInBgpRib(route, false);
                     bgp.processMergeOrRemoveInEbgpOrIbgpRib(route, false, true);
                     bgp.processMergeOrRemoveInBgpRib(route, true);
-                    bgp.endOfInnerRound();
-                    if (bgp.isDirty()) System.out.println(bgp + " is dirty");
                   });
             });
+
+    // step4: incremental BGP simulation
     simulateBgp(nodes, vrs, topologyContext);
 
     // step4: update the current data plane

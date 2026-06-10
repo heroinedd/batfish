@@ -88,8 +88,7 @@ public class TraceExecutor {
       LOGGER.info((isUndo ? "Undo " : "") + action.toString());
       if (action instanceof TraceAction.Remove) {
         TraceAction.ConfigExpr expr = ((TraceAction.Remove) action).expr;
-        if (expr instanceof TraceAction.ConfigExpr.BgpSession) {
-          TraceAction.ConfigExpr.BgpSession bgp = (TraceAction.ConfigExpr.BgpSession) expr;
+        if (expr instanceof TraceAction.ConfigExpr.BgpSession bgp) {
           BgpSession fwd = lookupSession(initSessionCache, bgp.source, bgp.target);
           BgpSession rev = lookupSession(initSessionCache, bgp.target, bgp.source);
           if (!isUndo) {
@@ -106,8 +105,7 @@ public class TraceExecutor {
 
       } else if (action instanceof TraceAction.Insert) {
         TraceAction.ConfigExpr expr = ((TraceAction.Insert) action).expr;
-        if (expr instanceof TraceAction.ConfigExpr.BgpSession) {
-          TraceAction.ConfigExpr.BgpSession bgp = (TraceAction.ConfigExpr.BgpSession) expr;
+        if (expr instanceof TraceAction.ConfigExpr.BgpSession bgp) {
           BgpSession fwd = lookupSession(finalSessionCache, bgp.source, bgp.target);
           BgpSession rev = lookupSession(finalSessionCache, bgp.target, bgp.source);
           if (!isUndo) {
@@ -122,11 +120,8 @@ public class TraceExecutor {
           LOGGER.warn("Skipping unsupported Insert expr: {}", expr.getClass().getSimpleName());
         }
 
-      } else if (action instanceof TraceAction.Update) {
-        TraceAction.Update update = (TraceAction.Update) action;
-        if (update.from instanceof TraceAction.ConfigExpr.BgpSession) {
-          TraceAction.ConfigExpr.BgpSession fromBgp =
-              (TraceAction.ConfigExpr.BgpSession) update.from;
+      } else if (action instanceof TraceAction.Update update) {
+        if (update.from instanceof TraceAction.ConfigExpr.BgpSession fromBgp) {
           TraceAction.ConfigExpr.BgpSession toBgp = (TraceAction.ConfigExpr.BgpSession) update.to;
           BgpSession oldFwd = lookupSession(initSessionCache, fromBgp.source, fromBgp.target);
           BgpSession oldRev = lookupSession(initSessionCache, fromBgp.target, fromBgp.source);
@@ -147,9 +142,7 @@ public class TraceExecutor {
                 new BgpSession(oldFwd.id1, oldFwd.id2, oldFwd.properties),
                 new BgpSession(oldRev.id1, oldRev.id2, oldRev.properties));
           }
-        } else if (update.from instanceof TraceAction.ConfigExpr.IgpLinkWeight) {
-          TraceAction.ConfigExpr.IgpLinkWeight from =
-              (TraceAction.ConfigExpr.IgpLinkWeight) update.from;
+        } else if (update.from instanceof TraceAction.ConfigExpr.IgpLinkWeight from) {
           TraceAction.ConfigExpr.IgpLinkWeight to =
               (TraceAction.ConfigExpr.IgpLinkWeight) update.to;
           // When undoing, the ratio is inverted: restore from by applying (from/to) ratio
