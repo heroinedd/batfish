@@ -1,5 +1,7 @@
 package org.batfish.dataplane.ibdp;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.graph.EndpointPair;
 import com.google.common.graph.MutableValueGraph;
 import com.google.common.graph.ValueGraph;
 import com.google.common.graph.ValueGraphBuilder;
@@ -7,7 +9,10 @@ import org.batfish.common.BatfishException;
 import org.batfish.common.plugin.DataPlanePlugin;
 import org.batfish.datamodel.*;
 import org.batfish.datamodel.answers.IncrementalBdpAnswerElement;
+import org.batfish.datamodel.bgp.AddressFamily;
 import org.batfish.datamodel.bgp.BgpTopology;
+import org.batfish.datamodel.routing_policy.RoutingPolicy;
+import org.batfish.datamodel.routing_policy.statement.Statement;
 import org.batfish.dataplane.ibdp.schedule.IbdpSchedule;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -151,6 +156,74 @@ public class IncrementalSimulator {
     simulateBgp(nodes, vrs, topologyContext);
 
     // step4: update the current data plane
+    updateCurrentDataplane(nodes, vrs, topologyContext);
+  }
+
+  /**
+   * Incremental simulation after modifying the {@code node1}'s incoming / outgoing routing policy
+   * from / to {@code node2}.
+   */
+  public void modifyRoutingPolicyAndSimulate(
+      String r1, String r2, RoutingPolicy newPolicy, boolean incoming) {
+    String receiver = incoming ? r1 : r2;
+    String sender = incoming ? r2 : r1;
+
+    SortedMap<String, Node> nodes = new TreeMap<>(currDataPlaneResult.getNodes());
+    List<VirtualRouter> vrs =
+        toListInRandomOrder(nodes.values().stream().flatMap(n -> n.getVirtualRouters().stream()));
+
+    NetworkConfigurations nc =
+        NetworkConfigurations.of(
+            nodes.entrySet().stream()
+                .collect(
+                    ImmutableMap.toImmutableMap(
+                        Map.Entry::getKey, e -> e.getValue().getConfiguration())));
+    TopologyContext topologyContext =
+        ((TopologyContext) currDataPlaneResult._topologies).toBuilder().build();
+
+    // step1: find out the impacted bgp edge
+    EndpointPair<BgpPeerConfigId> edge =
+        topologyContext.getBgpTopology().getGraph().edges().stream()
+            .filter(
+                e ->
+                    e.source().getHostname().equals(sender)
+                        && e.target().getHostname().equals(receiver))
+            .findFirst()
+            .get();
+
+    // step2: update the routing policy in Node
+    Configuration c1 = nodes.get(r1).getConfiguration();
+    if (incoming) {
+      // changing node1's (receiver) import policy from node2
+      String policyName =
+          nc.getBgpPeerConfig(edge.target())
+              .getAddressFamily(AddressFamily.Type.IPV4_UNICAST)
+              .getImportPolicy();
+      c1.getRoutingPolicies().get(policyName).setStatements(newPolicy.getStatements());
+    } else {
+      // changing node1's (sender) export policy to node2
+      String policyName =
+          nc.getBgpPeerConfig(edge.source())
+              .getAddressFamily(AddressFamily.Type.IPV4_UNICAST)
+              .getExportPolicy();
+      // todo the following logic may contain bugs
+      RoutingPolicy oldPolicy = c1.getRoutingPolicies().get(policyName);
+      List<Statement> oldStatements = oldPolicy.getStatements();
+      oldStatements.addAll(newPolicy.getStatements());
+      oldPolicy.setStatements(newPolicy.getStatements());
+    }
+
+    // step3: let the neighbor resend all bgp routes
+    BgpRoutingProcess bgp =
+        nodes.get(receiver).getVirtualRouter("default").get().getBgpRoutingProcess();
+    BgpTopology.EdgeId eId = new BgpTopology.EdgeId(edge.source(), edge.target());
+    bgp.removeRoutesFromSession(eId);
+    bgp.pullV4UnicastMessages(topologyContext.getBgpTopology(), nc, nodes, eId, true);
+
+    // step4: incremental BGP simulation
+    simulateBgp(nodes, vrs, topologyContext);
+
+    // step5: update the current data plane
     updateCurrentDataplane(nodes, vrs, topologyContext);
   }
 

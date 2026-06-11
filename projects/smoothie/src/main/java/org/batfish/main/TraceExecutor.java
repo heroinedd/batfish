@@ -6,6 +6,10 @@ import org.apache.logging.log4j.Logger;
 import org.batfish.datamodel.BgpPeerConfigId;
 import org.batfish.datamodel.Edge;
 import org.batfish.datamodel.bgp.BgpTopology;
+import org.batfish.datamodel.routing_policy.RoutingPolicy;
+import org.batfish.datamodel.routing_policy.expr.LiteralLong;
+import org.batfish.datamodel.routing_policy.statement.SetLocalPreference;
+import org.batfish.datamodel.routing_policy.statement.Statements;
 import org.batfish.dataplane.ibdp.BgpSession;
 import org.batfish.dataplane.ibdp.IncrementalSimulator;
 
@@ -116,6 +120,15 @@ public class TraceExecutor {
             simulator.insertOrRemoveBgpSessionAndSimulate(
                 new BgpSession(fwd.id1, fwd.id2, null), new BgpSession(rev.id1, rev.id2, null));
           }
+        } else if (expr instanceof TraceAction.ConfigExpr.BgpRouteMap rp) {
+          RoutingPolicy setLocalPref =
+              RoutingPolicy.builder()
+                  .setName("set_local_pref_" + rp.localPref)
+                  .addStatement(new SetLocalPreference(new LiteralLong(rp.localPref)))
+                  .addStatement(Statements.ExitAccept.toStaticStatement())
+                  .build();
+          simulator.modifyRoutingPolicyAndSimulate(
+              toHostname(rp.router), toHostname(rp.neighbor), setLocalPref, rp.incoming);
         } else {
           LOGGER.warn("Skipping unsupported Insert expr: {}", expr.getClass().getSimpleName());
         }

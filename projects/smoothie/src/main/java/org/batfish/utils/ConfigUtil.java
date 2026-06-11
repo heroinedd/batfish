@@ -185,8 +185,8 @@ public class ConfigUtil {
             .build();
     c1.getDefaultVrf().getBgpProcess().getActiveNeighbors().put(loopback2, peer12);
     c2.getDefaultVrf().getBgpProcess().getActiveNeighbors().put(loopback1, peer21);
-    bgpNeighborSpecificPolicy(c1, loopback2);
-    bgpNeighborSpecificPolicy(c2, loopback1);
+    bgpNeighborSpecificExportPolicy(c1, loopback2);
+    bgpNeighborSpecificExportPolicy(c2, loopback1);
   }
 
   public static void eBgpSession(
@@ -206,6 +206,9 @@ public class ConfigUtil {
             .setPeerAddress(ip2)
             .setIpv4UnicastAddressFamily(
                 Ipv4UnicastAddressFamily.builder()
+                    .setImportPolicy(
+                        generatedBgpPeerImportPolicyName(
+                            c1.getDefaultVrf().getName(), ip2.toString()))
                     .setExportPolicy(
                         generatedBgpPeerExportPolicyName(
                             c1.getDefaultVrf().getName(), ip2.toString()))
@@ -219,6 +222,9 @@ public class ConfigUtil {
             .setPeerAddress(ip1)
             .setIpv4UnicastAddressFamily(
                 Ipv4UnicastAddressFamily.builder()
+                    .setImportPolicy(
+                        generatedBgpPeerImportPolicyName(
+                            c2.getDefaultVrf().getName(), ip1.toString()))
                     .setExportPolicy(
                         generatedBgpPeerExportPolicyName(
                             c2.getDefaultVrf().getName(), ip1.toString()))
@@ -226,8 +232,10 @@ public class ConfigUtil {
             .build();
     c1.getDefaultVrf().getBgpProcess().getActiveNeighbors().put(ip2, peer12);
     c2.getDefaultVrf().getBgpProcess().getActiveNeighbors().put(ip1, peer21);
-    bgpNeighborSpecificPolicy(c1, ip2);
-    bgpNeighborSpecificPolicy(c2, ip1);
+    bgpNeighborSpecificExportPolicy(c1, ip2);
+    bgpNeighborSpecificExportPolicy(c2, ip1);
+    bgpNeighborSpecificImportPolicy(c1, ip2);
+    bgpNeighborSpecificImportPolicy(c2, ip1);
   }
 
   private static void bgpNetwork(Configuration c, Prefix prefix) {
@@ -304,7 +312,7 @@ public class ConfigUtil {
     proc.setRedistributionPolicy(redistPolicyName);
   }
 
-  public static void bgpNeighborSpecificPolicy(Configuration c, Ip peerIp) {
+  public static void bgpNeighborSpecificExportPolicy(Configuration c, Ip peerIp) {
     List<Statement> exportPolicyStatements = new ArrayList<>();
     // Conditions for exporting regular routes (not spawned by default-originate)
     List<BooleanExpr> peerExportConjuncts = new ArrayList<>();
@@ -320,6 +328,16 @@ public class ConfigUtil {
         .setOwner(c)
         .setName(generatedBgpPeerExportPolicyName(c.getDefaultVrf().getName(), peerIp.toString()))
         .setStatements(exportPolicyStatements)
+        .build();
+  }
+
+  public static void bgpNeighborSpecificImportPolicy(Configuration c, Ip peerIp) {
+    List<Statement> importPolicyStatements = new ArrayList<>();
+    importPolicyStatements.add(Statements.ExitAccept.toStaticStatement());
+    RoutingPolicy.builder()
+        .setOwner(c)
+        .setName(generatedBgpPeerImportPolicyName(c.getDefaultVrf().getName(), peerIp.toString()))
+        .setStatements(importPolicyStatements)
         .build();
   }
 

@@ -90,7 +90,34 @@ public class Main {
     TraceExecutor executor = new TraceExecutor(simulator, batfish, simulator.getBgpTopology());
     executor.execute(steps);
 
-    LOGGER.info("{}-igpx2 finish in {}s", name, (System.nanoTime() - start) / 1e9);
+    double duration = (System.nanoTime() - start) / 1e9;
+    LOGGER.info("{}-igpx2 finish in {}s", name, duration);
+    System.out.printf("%s-IGPx2\t%f\n", name, duration);
+  }
+
+  public static void lpx2(String name) throws IOException {
+    long start = System.nanoTime();
+    LOGGER.info("{}-lpx2 starts", name);
+
+    Pair<List<Integer>, List<TraceParser.Step>> parsed = loadTrace(name, "LPx2");
+    List<Integer> reflectors = parsed.getLeft();
+    List<TraceParser.Step> steps = parsed.getRight();
+
+    Map<String, Configuration> configs = TopologyZoo.init(name, false, reflectors.get(0));
+    Pair<Path, Batfish> pair =
+        BatfishUtil.getBatfishFromConfiguration(
+            BatfishUtil.OUTPUT_BASE, name + "-lpx2", new TreeMap<>(configs), null, false);
+    Batfish batfish = pair.getRight();
+    IncrementalSimulator simulator = new IncrementalSimulator(batfish);
+    simulator.computeInitialDataPlane();
+
+    // LPx2 traces only modify route maps (no BGP session changes), so finalBgpTopology == initial
+    TraceExecutor executor = new TraceExecutor(simulator, batfish, simulator.getBgpTopology());
+    executor.execute(steps);
+
+    double duration = (System.nanoTime() - start) / 1e9;
+    LOGGER.info("{}-lpx2 finish in {}s", name, duration);
+    System.out.printf("%s-LPx2\t%f\n", name, duration);
   }
 
   public static void main(String[] args) {

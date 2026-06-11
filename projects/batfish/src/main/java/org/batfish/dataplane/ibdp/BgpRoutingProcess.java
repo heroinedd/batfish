@@ -694,7 +694,7 @@ final class BgpRoutingProcess implements RoutingProcess<BgpTopology, BgpRoute<?,
 
     // Within eBGP RIB, filter out routes that was received from this session
     Set<Bgpv4Route> routesToRemove =
-        _ebgpv4Rib.getRoutes().stream()
+        _ebgpv4Rib.getBackupRoutes().stream()
             .filter(filter::apply)
             .collect(ImmutableSet.toImmutableSet());
 
@@ -707,7 +707,7 @@ final class BgpRoutingProcess implements RoutingProcess<BgpTopology, BgpRoute<?,
 
     // Similar filtering for iBGP RIB
     Set<Bgpv4Route> ibgpRoutesToRemove =
-        _ibgpv4Rib.getRoutes().stream()
+        _ibgpv4Rib.getBackupRoutes().stream()
             .filter(filter::apply)
             .collect(ImmutableSet.toImmutableSet());
 
@@ -1022,7 +1022,7 @@ final class BgpRoutingProcess implements RoutingProcess<BgpTopology, BgpRoute<?,
   }
 
   /** Pull v4Unicast routes from our neighbors' deltas, merge them into our own RIBs */
-  private void pullV4UnicastMessages(
+  void pullV4UnicastMessages(
       BgpTopology bgpTopology,
       NetworkConfigurations nc,
       Map<String, Node> nodes,

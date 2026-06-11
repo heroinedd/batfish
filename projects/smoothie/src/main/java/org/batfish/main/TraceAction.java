@@ -1,7 +1,5 @@
 package org.batfish.main;
 
-import com.fasterxml.jackson.databind.JsonNode;
-
 /** A modification to apply to the network configuration. Mirrors Rust's {@code ConfigModifier}. */
 public abstract class TraceAction {
 
@@ -55,20 +53,34 @@ public abstract class TraceAction {
       }
     }
 
+    /**
+     * This is an ad hoc implementation according to Snowcap's encoding of route-map, and the
+     * updating action (just changing local preference).
+     */
     public static class BgpRouteMap extends ConfigExpr {
       public final int router;
-      public final String direction;
-      public final JsonNode map;
+      public final boolean incoming;
+      public final int neighbor;
+      public final int localPref;
 
-      public BgpRouteMap(int router, String direction, JsonNode map) {
+      public BgpRouteMap(int router, String direction, int neighbor, int localPref) {
         this.router = router;
-        this.direction = direction;
-        this.map = map;
+        this.incoming = direction.equalsIgnoreCase("incoming");
+        this.neighbor = neighbor;
+        this.localPref = localPref;
       }
 
       @Override
       public String toString() {
-        return "BgpRouteMap(router=" + router + ", " + direction + ", map=" + map + ")";
+        return "BgpRouteMap(router="
+            + router
+            + ", "
+            + (incoming ? "incoming" : "outgoing")
+            + ", neighbor="
+            + neighbor
+            + ", localPref="
+            + localPref
+            + ")";
       }
     }
 
@@ -134,5 +146,4 @@ public abstract class TraceAction {
       return "Update(" + from + " → " + to + ")";
     }
   }
-
 }

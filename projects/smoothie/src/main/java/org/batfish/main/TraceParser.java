@@ -99,13 +99,26 @@ public class TraceParser {
             parseSessionType(node.get("session_type").asText()));
       case "bgp_route_map":
         return new TraceAction.ConfigExpr.BgpRouteMap(
-            node.get("router").asInt(), node.get("direction").asText(), node.get("map"));
+            node.get("router").asInt(),
+            node.get("direction").asText(),
+            parse(node, "conds", "neighbor", "router"),
+            parse(node, "set", "local_pref", "value"));
       case "static_route":
         return new TraceAction.ConfigExpr.StaticRoute(
             node.get("router").asInt(), node.get("prefix").asText(), node.get("target").asInt());
       default:
         throw new IllegalArgumentException("Unknown ConfigExpr type: " + type);
     }
+  }
+
+  private static int parse(JsonNode node, String k1, String k2, String k3) {
+    return node.get("map")
+        .get(k1)
+        .valueStream()
+        .filter(e -> e.get("type").asText().equals(k2))
+        .findFirst()
+        .map(e -> e.get(k3).asInt())
+        .get();
   }
 
   private static TraceAction.SessionType parseSessionType(String s) {
