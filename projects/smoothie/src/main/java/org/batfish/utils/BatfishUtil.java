@@ -40,10 +40,8 @@ import org.batfish.vendor.VendorConfiguration;
 public class BatfishUtil {
   private static final Logger LOGGER = LogManager.getLogger(BatfishUtil.class);
 
-  public static final Path INPUT_BASE =
-      Paths.get("/Users/wangdan/ANTS/smoothie/networks/topology-zoo");
-  public static final Path OUTPUT_BASE =
-      Paths.get("/Users/wangdan/ANTS/batfish/projects/smoothie/outputs/topology-zoo");
+  public static final Path INPUT_BASE = SmoothieConfig.inputBase();
+  public static final Path OUTPUT_BASE = SmoothieConfig.outputBase();
 
   public static final String CONTAINERS = "containers";
   public static final String NETWORKS = "networks";

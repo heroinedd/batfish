@@ -13,18 +13,17 @@ import org.batfish.identifiers.NetworkId;
 import org.batfish.identifiers.SnapshotId;
 import org.batfish.storage.StorageProvider;
 import org.batfish.utils.BatfishUtil;
+import org.batfish.utils.SmoothieConfig;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 
 public class Main {
   private static final Logger LOGGER = LogManager.getLogger(Main.class);
 
-  private static final Path TRACES_DIR =
-      Paths.get(System.getProperty("user.home")).resolve("ANTS/snowcap/smoothie/zoo/traces");
+  private static final Path TRACES_DIR = SmoothieConfig.tracesDir();
 
   /**
    * Parses a trace file named {@code <name>-<suffix>.json} and logs the result.
@@ -184,7 +183,7 @@ public class Main {
     List<String> files =
         Arrays.stream(
                 Objects.requireNonNull(
-                    new File("/Users/wangdan/ANTS/snowcap/eval_sigcomm2021/topology_zoo").list()))
+                    new File(SmoothieConfig.topologiesDir().toString()).list()))
             .sorted()
             .toList();
     for (String file : files) {

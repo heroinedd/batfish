@@ -7,6 +7,7 @@ import org.batfish.datamodel.Configuration;
 import org.batfish.storage.StorageProvider;
 import org.batfish.utils.BatfishUtil;
 import org.batfish.utils.ResultPrinter;
+import org.batfish.utils.SmoothieConfig;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -45,7 +46,7 @@ public class NetworkFactory {
 
   public static Triple<Path, StorageProvider, Batfish> example() {
     Map<String, String> configurations = new TreeMap<>();
-    Path folder = Paths.get("/Users/wangdan/ANTS/batfish/networks/example/candidate/configs");
+    Path folder = SmoothieConfig.networksExample();
     for (String name : Objects.requireNonNull(folder.toFile().list())) {
       try (BufferedReader br = new BufferedReader(new FileReader(folder.resolve(name).toFile()))) {
         configurations.put(name.split("\\.")[0], br.lines().collect(Collectors.joining("\n")));
@@ -77,10 +78,8 @@ public class NetworkFactory {
     // boolean fullMesh = args.length > 1 && args[1].equalsIgnoreCase("true");
     // simulate(zooFromVI(name, fullMesh));
 
-    String internet2 =
-        "/Users/wangdan/ANTS/batfish/projects/smoothie/inputs/internet2-bagpipe-cleaned/configs";
-    String deltacom =
-        "/Users/wangdan/ANTS/cornetto/dataset/main_dataset/scenario-055/final_configs/configs";
+    String internet2 = SmoothieConfig.networksInternet2().toString();
+    String deltacom = SmoothieConfig.networksCornetto().toString();
     simulate(from(deltacom, "deltacom"));
   }
 }

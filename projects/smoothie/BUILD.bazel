@@ -43,6 +43,9 @@ java_library(
     srcs = glob([
         "src/main/**/*.java",
     ]),
+    resources = glob([
+        "src/main/resources/**",
+    ]),
     deps = [
         "//projects/batfish",
         "//projects/batfish-common-protocol:common",
