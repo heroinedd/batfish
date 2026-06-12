@@ -19,14 +19,16 @@ import org.apache.commons.lang3.tuple.Pair;
  */
 public class TraceParser {
 
-  /** One atomic step in the trace: a list of actions plus whether this step is an undo. */
+  /** One atomic step in the trace: a list of actions, whether this step is an undo, and whether it succeeded. */
   public static class Step {
     public final List<TraceAction> actions;
     public final boolean isUndo;
+    public final boolean success;
 
-    public Step(List<TraceAction> actions, boolean isUndo) {
+    public Step(List<TraceAction> actions, boolean isUndo, boolean success) {
       this.actions = actions;
       this.isUndo = isUndo;
+      this.success = success;
     }
   }
 
@@ -53,7 +55,7 @@ public class TraceParser {
             for (JsonNode actionNode : event.get("attempted")) {
               actions.add(parseAction(actionNode));
             }
-            steps.add(new Step(actions, false));
+            steps.add(new Step(actions, false, event.get("success").asBoolean()));
             break;
           }
         case "undo":
@@ -62,7 +64,7 @@ public class TraceParser {
             for (JsonNode actionNode : event.get("undone")) {
               actions.add(parseAction(actionNode));
             }
-            steps.add(new Step(actions, true));
+            steps.add(new Step(actions, true, true));
             break;
           }
         default:
