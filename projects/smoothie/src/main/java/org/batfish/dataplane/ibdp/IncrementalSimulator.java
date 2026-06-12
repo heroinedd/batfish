@@ -6,8 +6,10 @@ import com.google.common.graph.MutableValueGraph;
 import com.google.common.graph.ValueGraph;
 import com.google.common.graph.ValueGraphBuilder;
 import org.batfish.common.BatfishException;
+import org.batfish.common.NetworkSnapshot;
 import org.batfish.common.plugin.DataPlanePlugin;
 import org.batfish.datamodel.*;
+import org.batfish.datamodel.answers.ConvertConfigurationAnswerElement;
 import org.batfish.datamodel.answers.IncrementalBdpAnswerElement;
 import org.batfish.datamodel.bgp.AddressFamily;
 import org.batfish.datamodel.bgp.BgpTopology;
@@ -17,7 +19,9 @@ import org.batfish.dataplane.ibdp.schedule.IbdpSchedule;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.batfish.dataplane.rib.RibDelta;
+import org.batfish.identifiers.SnapshotId;
 import org.batfish.main.Batfish;
+import org.batfish.storage.StorageProvider;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -35,13 +39,25 @@ public class IncrementalSimulator {
   public static boolean DEBUG_RIB_DIFF = true;
 
   Batfish batfish;
+  StorageProvider storage;
   IncrementalBdpEngine engine;
+  private final Set<PrefixSpace> prefixSpaces;
+
   IbdpResult initDataPlaneResult;
+  private int idx = 0;
+  NetworkSnapshot currSnapshot;
   IbdpResult currDataPlaneResult;
 
-  public IncrementalSimulator(Batfish batfish) {
+  public IncrementalSimulator(Batfish batfish, StorageProvider storage) {
     this.batfish = batfish;
+    this.storage = storage;
     this.engine = ((IncrementalDataPlanePlugin) batfish.getDataPlanePlugin()).getEngine();
+    this.prefixSpaces =
+        batfish.loadConfigurations(batfish.getSnapshot()).values().stream()
+            .flatMap(c -> c.getVrfs().values().stream())
+            .filter(vr -> vr.getBgpProcess() != null)
+            .map(vr -> vr.getBgpProcess().getOriginationSpace())
+            .collect(Collectors.toSet());
   }
 
   public void computeInitialDataPlane() {
@@ -52,11 +68,12 @@ public class IncrementalSimulator {
           "Initial data plane result is not an IbdpResult, cannot execute incremental simulation upon the returned result.");
     }
     initDataPlaneResult = (IbdpResult) result;
+    currSnapshot = batfish.getSnapshot();
     currDataPlaneResult = initDataPlaneResult;
   }
 
   /** Incremental simulation after inserting or removing a BGP session. */
-  public void insertOrRemoveBgpSessionAndSimulate(BgpSession... sessions) {
+  public void insertOrRemoveBgpSessionAndSimulate(boolean expected, BgpSession... sessions) {
     SortedMap<String, Node> nodes = new TreeMap<>(currDataPlaneResult.getNodes());
     List<VirtualRouter> vrs =
         toListInRandomOrder(nodes.values().stream().flatMap(n -> n.getVirtualRouters().stream()));
@@ -88,10 +105,11 @@ public class IncrementalSimulator {
 
     // step4: update the current data plane
     updateCurrentDataplane(nodes, vrs, updatedTopologyContext);
+    checkSafety(currSnapshot, currDataPlaneResult._dataPlane, expected);
   }
 
   /** Incremental simulation after modifying the OSPF link weight. */
-  public void modifyOspfLinkWeightAndSimulate(Edge edge, int weight) {
+  public void modifyOspfLinkWeightAndSimulate(boolean expected, Edge edge, int weight) {
     SortedMap<String, Node> nodes = new TreeMap<>(currDataPlaneResult.getNodes());
     List<VirtualRouter> vrs =
         toListInRandomOrder(nodes.values().stream().flatMap(n -> n.getVirtualRouters().stream()));
@@ -123,11 +141,10 @@ public class IncrementalSimulator {
     engine.computeIgpDataPlane(nodes, vrs, topologyContext, new IncrementalBdpAnswerElement());
     vrs.parallelStream()
         .forEach(
-            vr -> {
-              vr.getMainRib().getRoutes().stream()
-                  .filter(route -> route.getRoute() instanceof OspfRoute)
-                  .forEach(route -> builders.get(vr).add(route));
-            });
+            vr ->
+                vr.getMainRib().getRoutes().stream()
+                    .filter(route -> route.getRoute() instanceof OspfRoute)
+                    .forEach(route -> builders.get(vr).add(route)));
 
     Map<VirtualRouter, RibDelta<AnnotatedRoute<AbstractRoute>>> deltas =
         builders.entrySet().stream()
@@ -157,6 +174,7 @@ public class IncrementalSimulator {
 
     // step4: update the current data plane
     updateCurrentDataplane(nodes, vrs, topologyContext);
+    checkSafety(currSnapshot, currDataPlaneResult._dataPlane, expected);
   }
 
   /**
@@ -164,7 +182,7 @@ public class IncrementalSimulator {
    * from / to {@code node2}.
    */
   public void modifyRoutingPolicyAndSimulate(
-      String r1, String r2, RoutingPolicy newPolicy, boolean incoming) {
+      boolean expected, String r1, String r2, RoutingPolicy newPolicy, boolean incoming) {
     String receiver = incoming ? r1 : r2;
     String sender = incoming ? r2 : r1;
 
@@ -225,6 +243,7 @@ public class IncrementalSimulator {
 
     // step5: update the current data plane
     updateCurrentDataplane(nodes, vrs, topologyContext);
+    checkSafety(currSnapshot, currDataPlaneResult._dataPlane, expected);
   }
 
   private void simulateBgp(
@@ -260,10 +279,30 @@ public class IncrementalSimulator {
             .setNodes(nodes)
             .setPartialDataplane(partialDataplane)
             .build();
-    // batfish.saveDataPlane(batfish.getSnapshot(), incrementalDataPlane, topologyContext);
+
+    // store configurations and data plane into a new snapshot
+    NetworkSnapshot newSnapshot =
+        new NetworkSnapshot(currSnapshot.getNetwork(), new SnapshotId("step" + idx++));
+    try {
+      storage.storeConfigurations(
+          nodes.entrySet().stream()
+              .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getConfiguration())),
+          new ConvertConfigurationAnswerElement(),
+          null,
+          newSnapshot.getNetwork(),
+          newSnapshot.getSnapshot());
+    } catch (Exception e) {
+      LOGGER.error(e.getMessage());
+    }
+    batfish.saveDataPlane(newSnapshot, incrementalDataPlane, topologyContext);
+
+    // debug rib diffs
     if (DEBUG_RIB_DIFF) {
       diffMainRibs((IncrementalDataPlane) currDataPlaneResult._dataPlane, incrementalDataPlane);
     }
+
+    // update current data plane
+    currSnapshot = newSnapshot;
     currDataPlaneResult =
         new IbdpResult(
             currDataPlaneResult._answerElement,
@@ -271,6 +310,24 @@ public class IncrementalSimulator {
             topologyContext,
             nodes,
             currDataPlaneResult.getIpOwners());
+  }
+
+  private void checkSafety(NetworkSnapshot snapshot, DataPlane dataPlane, boolean expected) {
+    // check control plane reachability
+    boolean cp =
+        dataPlane.getRibs().values().stream()
+            .allMatch(
+                rib ->
+                    prefixSpaces.stream()
+                        .allMatch(
+                            ps ->
+                                rib.getRoutes().stream()
+                                    .anyMatch(route -> ps.containsPrefix(route.getNetwork()))));
+
+    // detect data plane forwarding loop
+    Set<Flow> loopFlows = batfish.bddLoopDetection(snapshot);
+    boolean dp = loopFlows.isEmpty();
+    assert (cp && dp) == expected;
   }
 
   private void diffMainRibs(IncrementalDataPlane prev, IncrementalDataPlane next) {

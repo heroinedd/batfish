@@ -83,11 +83,11 @@ public class TraceExecutor {
   /** Executes all steps in the trace against the simulator. */
   public void execute(List<TraceParser.Step> steps) {
     for (TraceParser.Step step : steps) {
-      executeStep(step.actions, step.isUndo);
+      executeStep(step.actions, step.isUndo, step.success);
     }
   }
 
-  private void executeStep(List<TraceAction> actions, boolean isUndo) {
+  private void executeStep(List<TraceAction> actions, boolean isUndo, boolean expected) {
     for (TraceAction action : actions) {
       LOGGER.info((isUndo ? "Undo " : "") + action.toString());
       if (action instanceof TraceAction.Remove) {
@@ -98,10 +98,12 @@ public class TraceExecutor {
           if (!isUndo) {
             // Forward Remove: take both directions out of the network (look up init cache)
             simulator.insertOrRemoveBgpSessionAndSimulate(
-                new BgpSession(fwd.id1, fwd.id2, null), new BgpSession(rev.id1, rev.id2, null));
+                expected,
+                new BgpSession(fwd.id1, fwd.id2, null),
+                new BgpSession(rev.id1, rev.id2, null));
           } else {
             // Undo Remove: restore both directions (look up init cache)
-            simulator.insertOrRemoveBgpSessionAndSimulate(fwd, rev);
+            simulator.insertOrRemoveBgpSessionAndSimulate(expected, fwd, rev);
           }
         } else {
           LOGGER.warn("Skipping unsupported Remove expr: {}", expr.getClass().getSimpleName());
@@ -114,11 +116,13 @@ public class TraceExecutor {
           BgpSession rev = lookupSession(finalSessionCache, bgp.target, bgp.source);
           if (!isUndo) {
             // Forward Insert: add both directions (look up final cache)
-            simulator.insertOrRemoveBgpSessionAndSimulate(fwd, rev);
+            simulator.insertOrRemoveBgpSessionAndSimulate(expected, fwd, rev);
           } else {
             // Undo Insert: remove both directions (look up final cache)
             simulator.insertOrRemoveBgpSessionAndSimulate(
-                new BgpSession(fwd.id1, fwd.id2, null), new BgpSession(rev.id1, rev.id2, null));
+                expected,
+                new BgpSession(fwd.id1, fwd.id2, null),
+                new BgpSession(rev.id1, rev.id2, null));
           }
         } else if (expr instanceof TraceAction.ConfigExpr.BgpRouteMap rp) {
           RoutingPolicy setLocalPref =
@@ -128,7 +132,7 @@ public class TraceExecutor {
                   .addStatement(Statements.ExitAccept.toStaticStatement())
                   .build();
           simulator.modifyRoutingPolicyAndSimulate(
-              toHostname(rp.router), toHostname(rp.neighbor), setLocalPref, rp.incoming);
+              expected, toHostname(rp.router), toHostname(rp.neighbor), setLocalPref, rp.incoming);
         } else {
           LOGGER.warn("Skipping unsupported Insert expr: {}", expr.getClass().getSimpleName());
         }
@@ -143,6 +147,7 @@ public class TraceExecutor {
           if (!isUndo) {
             // Forward Update: remove old both directions (init), add new both directions (final)
             simulator.insertOrRemoveBgpSessionAndSimulate(
+                expected,
                 new BgpSession(oldFwd.id1, oldFwd.id2, null),
                 new BgpSession(oldRev.id1, oldRev.id2, null),
                 new BgpSession(newFwd.id1, newFwd.id2, newFwd.properties),
@@ -150,6 +155,7 @@ public class TraceExecutor {
           } else {
             // Undo Update: remove new both directions (final), restore old both directions (init)
             simulator.insertOrRemoveBgpSessionAndSimulate(
+                expected,
                 new BgpSession(newFwd.id1, newFwd.id2, null),
                 new BgpSession(newRev.id1, newRev.id2, null),
                 new BgpSession(oldFwd.id1, oldFwd.id2, oldFwd.properties),
@@ -159,7 +165,7 @@ public class TraceExecutor {
           TraceAction.ConfigExpr.IgpLinkWeight to =
               (TraceAction.ConfigExpr.IgpLinkWeight) update.to;
           // When undoing, the ratio is inverted: restore from by applying (from/to) ratio
-          executeIgpUpdate(isUndo ? to : from, isUndo ? from : to);
+          executeIgpUpdate(isUndo ? to : from, isUndo ? from : to, expected);
         } else {
           LOGGER.warn(
               "Skipping unsupported Update expr: {}", update.from.getClass().getSimpleName());
@@ -174,14 +180,16 @@ public class TraceExecutor {
    * current weight (e.g., after prior incremental changes).
    */
   private void executeIgpUpdate(
-      TraceAction.ConfigExpr.IgpLinkWeight from, TraceAction.ConfigExpr.IgpLinkWeight to) {
+      TraceAction.ConfigExpr.IgpLinkWeight from,
+      TraceAction.ConfigExpr.IgpLinkWeight to,
+      boolean expected) {
     String srcHostname = toHostname(from.source);
     String tgtHostname = toHostname(from.target);
     for (Edge edge : simulator.getLayer3Topology().getEdges()) {
       if (edge.getNode1().equals(srcHostname) && edge.getNode2().equals(tgtHostname)) {
         int current = simulator.getOspfLinkWeight(edge);
         int updated = (int) (current * (to.weight / from.weight));
-        simulator.modifyOspfLinkWeightAndSimulate(edge, updated);
+        simulator.modifyOspfLinkWeightAndSimulate(expected, edge, updated);
         return;
       }
     }
