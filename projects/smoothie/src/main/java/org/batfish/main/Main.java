@@ -37,15 +37,10 @@ public class Main {
     return parsed;
   }
 
-  public static void fm2rr(String name) throws IOException {
-    long start = System.nanoTime();
-    LOGGER.info("{}-fm2rr starts", name);
-
-    Pair<List<Integer>, List<TraceParser.Step>> parsed = loadTrace(name, "FM2RR");
-    List<Integer> reflectors = parsed.getLeft();
-    List<TraceParser.Step> steps = parsed.getRight();
-
-    Map<String, Configuration> initialConfigs = TopologyZoo.init(name, true, null);
+  private static TraceExecutor getExecutor(
+      String name,
+      Map<String, Configuration> initialConfigs,
+      Map<String, Configuration> finalConfigs) {
     Pair<Path, Batfish> initialPair =
         BatfishUtil.getBatfishFromConfiguration(
             BatfishUtil.OUTPUT_BASE, name + "-initial", new TreeMap<>(initialConfigs), null, false);
@@ -53,70 +48,114 @@ public class Main {
     IncrementalSimulator simulator = new IncrementalSimulator(initialBatfish);
     simulator.computeInitialDataPlane();
 
-    Map<String, Configuration> finalConfigs = TopologyZoo.init(name, false, reflectors.get(0));
-    Pair<Path, Batfish> finalPair =
-        BatfishUtil.getBatfishFromConfiguration(
-            BatfishUtil.OUTPUT_BASE, name + "-final", new TreeMap<>(finalConfigs), null, false);
-    Batfish finalBatfish = finalPair.getRight();
-    finalBatfish.computeDataPlane(finalBatfish.getSnapshot());
-    BgpTopology finalBgpTopology =
-        finalBatfish.getTopologyProvider().getBgpTopology(finalBatfish.getSnapshot());
+    BgpTopology finalBgpTopology = simulator.getBgpTopology();
+    if (finalConfigs != null) {
+      Pair<Path, Batfish> finalPair =
+          BatfishUtil.getBatfishFromConfiguration(
+              BatfishUtil.OUTPUT_BASE, name + "-final", new TreeMap<>(finalConfigs), null, false);
+      Batfish finalBatfish = finalPair.getRight();
+      finalBatfish.computeDataPlane(finalBatfish.getSnapshot());
+      finalBgpTopology =
+          finalBatfish.getTopologyProvider().getBgpTopology(finalBatfish.getSnapshot());
+    }
 
-    TraceExecutor executor = new TraceExecutor(simulator, initialBatfish, finalBgpTopology);
+    return new TraceExecutor(simulator, initialBatfish, finalBgpTopology);
+  }
+
+  public static void fm2rr(String name) throws IOException {
+    long start = System.nanoTime();
+    LOGGER.info("{}-FM2RR starts", name);
+
+    Pair<List<Integer>, List<TraceParser.Step>> parsed = loadTrace(name, "FM2RR");
+    List<Integer> reflectors = parsed.getLeft();
+    List<TraceParser.Step> steps = parsed.getRight();
+
+    Map<String, Configuration> initialConfigs = TopologyZoo.init(name, true, null);
+    Map<String, Configuration> finalConfigs = TopologyZoo.init(name, false, reflectors.get(0));
+
+    TraceExecutor executor = getExecutor(name, initialConfigs, finalConfigs);
     executor.execute(steps);
 
     // simulator.checkSafety();
     double duration = (System.nanoTime() - start) / 1e9;
-    LOGGER.info("{}-fm2rr finish in {}s", name, duration);
+    LOGGER.info("{}-FM2RR finish in {}s", name, duration);
     System.out.printf("%s-FM2RR\t%f\n", name, duration);
+  }
+
+  public static void rrx2(String name) throws IOException {
+    long start = System.nanoTime();
+    LOGGER.info("{}-RRx2 starts", name);
+
+    Pair<List<Integer>, List<TraceParser.Step>> parsed = loadTrace(name, "RRx2");
+    List<Integer> reflectors = parsed.getLeft();
+    List<TraceParser.Step> steps = parsed.getRight();
+
+    Map<String, Configuration> initialConfigs = TopologyZoo.init(name, false, reflectors.get(0));
+    Map<String, Configuration> finalConfigs = TopologyZoo.init(name, false, true);
+
+    TraceExecutor executor = getExecutor(name, initialConfigs, finalConfigs);
+    executor.execute(steps);
+
+    // simulator.checkSafety();
+    double duration = (System.nanoTime() - start) / 1e9;
+    LOGGER.info("{}-RRx2 finish in {}s", name, duration);
+    System.out.printf("%s-RRx2\t%f\n", name, duration);
+  }
+
+  public static void netAcq(String name) throws IOException {
+    long start = System.nanoTime();
+    LOGGER.info("{}-NetAcq starts", name);
+
+    Pair<List<Integer>, List<TraceParser.Step>> parsed = loadTrace(name, "NetAcq");
+    List<TraceParser.Step> steps = parsed.getRight();
+
+    Map<String, Configuration> initialConfigs = TopologyZoo.init(name, true, false);
+    Map<String, Configuration> finalConfigs = TopologyZoo.init(name, false, false);
+
+    // NetAcq traces have no BGP session changes, so finalBgpTopology == initial
+    TraceExecutor executor = getExecutor(name, initialConfigs, finalConfigs);
+    executor.execute(steps);
+
+    // simulator.checkSafety();
+    double duration = (System.nanoTime() - start) / 1e9;
+    LOGGER.info("{}-NetAcq finish in {}s", name, duration);
+    System.out.printf("%s-NetAcq\t%f\n", name, duration);
   }
 
   public static void igpx2(String name) throws IOException {
     long start = System.nanoTime();
-    LOGGER.info("{}-igpx2 starts", name);
+    LOGGER.info("{}-IGPx2 starts", name);
 
     Pair<List<Integer>, List<TraceParser.Step>> parsed = loadTrace(name, "IGPx2");
     List<TraceParser.Step> steps = parsed.getRight();
 
     Map<String, Configuration> configs = TopologyZoo.init(name, false, null);
-    Pair<Path, Batfish> pair =
-        BatfishUtil.getBatfishFromConfiguration(
-            BatfishUtil.OUTPUT_BASE, name + "-igpx2", new TreeMap<>(configs), null, false);
-    Batfish batfish = pair.getRight();
-    IncrementalSimulator simulator = new IncrementalSimulator(batfish);
-    simulator.computeInitialDataPlane();
 
     // IGPx2 traces have no BGP session changes, so finalBgpTopology == initial
-    TraceExecutor executor = new TraceExecutor(simulator, batfish, simulator.getBgpTopology());
+    TraceExecutor executor = getExecutor(name, configs, null);
     executor.execute(steps);
 
     double duration = (System.nanoTime() - start) / 1e9;
-    LOGGER.info("{}-igpx2 finish in {}s", name, duration);
+    LOGGER.info("{}-IGPx2 finish in {}s", name, duration);
     System.out.printf("%s-IGPx2\t%f\n", name, duration);
   }
 
   public static void lpx2(String name) throws IOException {
     long start = System.nanoTime();
-    LOGGER.info("{}-lpx2 starts", name);
+    LOGGER.info("{}-LPx2 starts", name);
 
     Pair<List<Integer>, List<TraceParser.Step>> parsed = loadTrace(name, "LPx2");
     List<Integer> reflectors = parsed.getLeft();
     List<TraceParser.Step> steps = parsed.getRight();
 
     Map<String, Configuration> configs = TopologyZoo.init(name, false, reflectors.get(0));
-    Pair<Path, Batfish> pair =
-        BatfishUtil.getBatfishFromConfiguration(
-            BatfishUtil.OUTPUT_BASE, name + "-lpx2", new TreeMap<>(configs), null, false);
-    Batfish batfish = pair.getRight();
-    IncrementalSimulator simulator = new IncrementalSimulator(batfish);
-    simulator.computeInitialDataPlane();
 
     // LPx2 traces only modify route maps (no BGP session changes), so finalBgpTopology == initial
-    TraceExecutor executor = new TraceExecutor(simulator, batfish, simulator.getBgpTopology());
+    TraceExecutor executor = getExecutor(name, configs, null);
     executor.execute(steps);
 
     double duration = (System.nanoTime() - start) / 1e9;
-    LOGGER.info("{}-lpx2 finish in {}s", name, duration);
+    LOGGER.info("{}-LPx2 finish in {}s", name, duration);
     System.out.printf("%s-LPx2\t%f\n", name, duration);
   }
 
@@ -131,7 +170,7 @@ public class Main {
       if (file.toLowerCase().contains("example")) continue;
       String name = file.split("\\.")[0];
       try {
-        fm2rr(name);
+        lpx2(name);
       } catch (IOException ignored) {
       }
     }

@@ -1,7 +1,10 @@
 package org.batfish.main;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.batfish.datamodel.Configuration;
 import org.batfish.datamodel.Prefix;
+import org.batfish.utils.BatfishUtil;
 import org.batfish.utils.ConfigUtil;
 import org.batfish.utils.GmlUtil;
 import org.jgrapht.graph.SimpleWeightedGraph;
@@ -20,6 +23,7 @@ public class TopologyZoo {
   private static final long INT_ASN = 55990;
   private static final long EXT_ASN = 10000;
 
+  /** Synthesize iBGP full mesh configurations or single router reflector configurations. */
   public static Map<String, Configuration> init(String name, boolean fullMesh, Integer rrId) {
     SimpleWeightedGraph<GmlUtil.Node, GmlUtil.Edge> g = GmlUtil.readTopology(name, -1);
 
@@ -72,6 +76,92 @@ public class TopologyZoo {
         }
       }
     }
+
+    // ebgp sessions
+    for (GmlUtil.Edge edge : g.edgeSet()) {
+      int id1 = g.getEdgeSource(edge).getId();
+      int id2 = g.getEdgeTarget(edge).getId();
+      if (externals.contains(id1) || externals.contains(id2)) {
+        eBgpSession(
+            configurations.get(id1),
+            configurations.get(id2),
+            CISCO_ETH + id2,
+            CISCO_ETH + id1,
+            externals.contains(id1) ? EXT_ASN + id1 : INT_ASN,
+            externals.contains(id2) ? EXT_ASN + id2 : INT_ASN);
+      }
+    }
+
+    // static routes
+    externals.forEach(er -> prefixes.forEach(p -> staticRoute(configurations.get(er), p)));
+
+    return configurations.values().stream()
+        .collect(Collectors.toMap(Configuration::getHostname, c -> c));
+  }
+
+  /** Synthesize iBGP configurations with two router reflectors. */
+  public static Map<String, Configuration> init(String name, boolean isolate, boolean metis) {
+    SimpleWeightedGraph<GmlUtil.Node, GmlUtil.Edge> g = GmlUtil.readTopology(name, -1);
+
+    int[] rr1 = {0}, rr2 = {0};
+    List<Integer> sub1 = Collections.emptyList(), sub2 = Collections.emptyList();
+    try {
+      Path path =
+          BatfishUtil.INPUT_BASE.resolve(name).resolve(metis ? "metis.json" : "subnetworks.json");
+      ObjectMapper mapper = new ObjectMapper();
+      JsonNode root = mapper.readTree(path.toFile());
+      rr1[0] = root.get("0").get(0).get("rr").asInt();
+      rr2[0] = root.get("0").get(1).get("rr").asInt();
+      sub1 = root.get("0").get(0).get("nodes").valueStream().map(JsonNode::asInt).toList();
+      sub2 = root.get("0").get(1).get("nodes").valueStream().map(JsonNode::asInt).toList();
+    } catch (Exception e) {
+      System.err.println("Failed to read json file: " + e.getMessage());
+      System.exit(1);
+    }
+
+    Map<Integer, Configuration> configurations = new TreeMap<>();
+    Set<Integer> externals = new HashSet<>();
+
+    // routers
+    for (GmlUtil.Node node : g.vertexSet()) {
+      int id = node.getId();
+      Configuration c = router((node.isInternal() ? "r" : "er") + id, loopbackIp(id));
+      configurations.put(id, c);
+      if (!node.isInternal()) externals.add(id);
+    }
+
+    // edges
+    for (GmlUtil.Edge edge : g.edgeSet()) {
+      GmlUtil.Node n1 = g.getEdgeSource(edge);
+      GmlUtil.Node n2 = g.getEdgeTarget(edge);
+      Configuration c1 = configurations.get(n1.getId());
+      Configuration c2 = configurations.get(n2.getId());
+      String subnet =
+          String.format(
+              "10.%d.%d", Math.min(n1.getId(), n2.getId()), Math.max(n1.getId(), n2.getId()));
+      edge(c1, c2, CISCO_ETH + n2.getId(), CISCO_ETH + n1.getId(), subnet);
+    }
+
+    // ospf and bgp processes
+    configurations.values().forEach(ConfigUtil::ospfProcess);
+    Set<Prefix> prefixes = Set.of(Prefix.parse("70.0.0.0/24"));
+    configurations.forEach(
+        (key, value) ->
+            bgpProcess(value, externals.contains(key) ? prefixes : Collections.emptySet()));
+
+    // ibgp sessions
+    if (!isolate)
+      iBgpSession(configurations.get(rr1[0]), configurations.get(rr2[0]), INT_ASN, false);
+    sub1.stream()
+        .filter(i -> i != rr1[0] && !externals.contains(i))
+        .forEach(
+            client ->
+                iBgpSession(configurations.get(client), configurations.get(rr1[0]), INT_ASN, true));
+    sub2.stream()
+        .filter(i -> i != rr2[0] && !externals.contains(i))
+        .forEach(
+            client ->
+                iBgpSession(configurations.get(client), configurations.get(rr2[0]), INT_ASN, true));
 
     // ebgp sessions
     for (GmlUtil.Edge edge : g.edgeSet()) {
@@ -329,11 +419,11 @@ public class TopologyZoo {
       String name, @Nullable SimpleWeightedGraph<GmlUtil.Node, GmlUtil.Edge> graph) {
     SimpleWeightedGraph<GmlUtil.Node, GmlUtil.Edge> g =
         graph != null ? graph : GmlUtil.readTopology(name, -1);
-    Set<GmlUtil.Node> set =
+    List<GmlUtil.Node> set =
         g.vertexSet().stream()
             .filter(GmlUtil.Node::isInternal)
             .sorted(Comparator.comparing(v -> g.degreeOf((GmlUtil.Node) v)).reversed())
-            .collect(Collectors.toSet());
+            .toList();
     return set.stream().iterator().next().getId();
   }
 }
