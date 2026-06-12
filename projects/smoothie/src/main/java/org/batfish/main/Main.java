@@ -4,9 +4,13 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.batfish.common.NetworkSnapshot;
 import org.batfish.datamodel.Configuration;
+import org.batfish.datamodel.answers.ConvertConfigurationAnswerElement;
 import org.batfish.datamodel.bgp.BgpTopology;
 import org.batfish.dataplane.ibdp.IncrementalSimulator;
+import org.batfish.identifiers.NetworkId;
+import org.batfish.identifiers.SnapshotId;
 import org.batfish.storage.StorageProvider;
 import org.batfish.utils.BatfishUtil;
 
@@ -39,30 +43,39 @@ public class Main {
     return parsed;
   }
 
+  private static long time = 0;
+
   private static TraceExecutor getExecutor(
       String name,
       Map<String, Configuration> initialConfigs,
       Map<String, Configuration> finalConfigs) {
-    Triple<Path, StorageProvider, Batfish> initialPair =
+    Triple<Path, StorageProvider, Batfish> triple =
         BatfishUtil.getBatfishFromConfiguration(
             BatfishUtil.OUTPUT_BASE, name, "initial", new TreeMap<>(initialConfigs), null, false);
-    Batfish initialBatfish = initialPair.getRight();
-    IncrementalSimulator simulator =
-        new IncrementalSimulator(initialBatfish, initialPair.getMiddle());
+    Batfish batfish = triple.getRight();
+    IncrementalSimulator simulator = new IncrementalSimulator(batfish, triple.getMiddle());
     simulator.computeInitialDataPlane();
 
-    BgpTopology finalBgpTopology = simulator.getBgpTopology();
-    if (finalConfigs != null) {
-      Triple<Path, StorageProvider, Batfish> finalPair =
-          BatfishUtil.getBatfishFromConfiguration(
-              BatfishUtil.OUTPUT_BASE, name, "final", new TreeMap<>(finalConfigs), null, false);
-      Batfish finalBatfish = finalPair.getRight();
-      finalBatfish.computeDataPlane(finalBatfish.getSnapshot());
-      finalBgpTopology =
-          finalBatfish.getTopologyProvider().getBgpTopology(finalBatfish.getSnapshot());
+    NetworkSnapshot finalSnapshot =
+        new NetworkSnapshot(new NetworkId(name), new SnapshotId("final"));
+    try {
+      triple
+          .getMiddle()
+          .storeConfigurations(
+              finalConfigs == null ? initialConfigs : finalConfigs,
+              new ConvertConfigurationAnswerElement(),
+              null,
+              finalSnapshot.getNetwork(),
+              finalSnapshot.getSnapshot());
+    } catch (IOException e) {
+      LOGGER.error("Could not save final configurations for {}: {}", name, e.getMessage());
     }
+    long start = System.nanoTime();
+    batfish.computeDataPlane(finalSnapshot);
+    time = System.nanoTime() - start;
+    BgpTopology finalBgpTopology = batfish.getTopologyProvider().getBgpTopology(finalSnapshot);
 
-    return new TraceExecutor(simulator, initialBatfish, finalBgpTopology);
+    return new TraceExecutor(simulator, batfish, finalBgpTopology);
   }
 
   public static void fm2rr(String name) throws IOException {
@@ -80,9 +93,10 @@ public class Main {
     executor.execute(steps);
 
     // simulator.checkSafety();
-    double duration = (System.nanoTime() - start) / 1e9;
+    double duration = (System.nanoTime() - start - time) / 1e9;
+    double checkingTime = executor.getCheckingTime() / 1e9;
     LOGGER.info("{}-FM2RR finish in {}s", name, duration);
-    System.out.printf("%s-FM2RR\t%f\n", name, duration);
+    System.out.printf("%s-FM2RR\t%f\t%f\n", name, checkingTime, duration);
   }
 
   public static void rrx2(String name) throws IOException {
@@ -100,9 +114,10 @@ public class Main {
     executor.execute(steps);
 
     // simulator.checkSafety();
-    double duration = (System.nanoTime() - start) / 1e9;
+    double duration = (System.nanoTime() - start - time) / 1e9;
+    double checkingTime = executor.getCheckingTime() / 1e9;
     LOGGER.info("{}-RRx2 finish in {}s", name, duration);
-    System.out.printf("%s-RRx2\t%f\n", name, duration);
+    System.out.printf("%s-RRx2\t%f\t%f\n", name, checkingTime, duration);
   }
 
   public static void netAcq(String name) throws IOException {
@@ -120,9 +135,10 @@ public class Main {
     executor.execute(steps);
 
     // simulator.checkSafety();
-    double duration = (System.nanoTime() - start) / 1e9;
+    double duration = (System.nanoTime() - start - time) / 1e9;
+    double checkingTime = executor.getCheckingTime() / 1e9;
     LOGGER.info("{}-NetAcq finish in {}s", name, duration);
-    System.out.printf("%s-NetAcq\t%f\n", name, duration);
+    System.out.printf("%s-NetAcq\t%f\t%f\n", name, checkingTime, duration);
   }
 
   public static void igpx2(String name) throws IOException {
@@ -138,9 +154,10 @@ public class Main {
     TraceExecutor executor = getExecutor(name, configs, null);
     executor.execute(steps);
 
-    double duration = (System.nanoTime() - start) / 1e9;
+    double duration = (System.nanoTime() - start - time) / 1e9;
+    double checkingTime = executor.getCheckingTime() / 1e9;
     LOGGER.info("{}-IGPx2 finish in {}s", name, duration);
-    System.out.printf("%s-IGPx2\t%f\n", name, duration);
+    System.out.printf("%s-IGPx2\t%f\t%f\n", name, checkingTime, duration);
   }
 
   public static void lpx2(String name) throws IOException {
@@ -157,9 +174,10 @@ public class Main {
     TraceExecutor executor = getExecutor(name, configs, null);
     executor.execute(steps);
 
-    double duration = (System.nanoTime() - start) / 1e9;
+    double duration = (System.nanoTime() - start - time) / 1e9;
+    double checkingTime = executor.getCheckingTime() / 1e9;
     LOGGER.info("{}-LPx2 finish in {}s", name, duration);
-    System.out.printf("%s-LPx2\t%f\n", name, duration);
+    System.out.printf("%s-LPx2\t%f\t%f\n", name, checkingTime, duration);
   }
 
   public static void main(String[] args) {
@@ -173,7 +191,8 @@ public class Main {
       if (file.toLowerCase().contains("example")) continue;
       String name = file.split("\\.")[0];
       try {
-        lpx2(name);
+        fm2rr(name);
+        break;
       } catch (IOException ignored) {
       }
     }

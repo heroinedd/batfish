@@ -215,4 +215,8 @@ public class TraceExecutor {
     if (hostnames.contains(external)) return external;
     throw new IllegalArgumentException("No router found for id " + id);
   }
+
+  public long getCheckingTime() {
+    return simulator.getCheckingTime();
+  }
 }

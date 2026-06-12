@@ -36,7 +36,7 @@ import static org.batfish.dataplane.ibdp.IncrementalBdpEngine.*;
 public class IncrementalSimulator {
   private static final Logger LOGGER = LogManager.getLogger(IncrementalSimulator.class);
 
-  public static boolean DEBUG_RIB_DIFF = true;
+  public static boolean DEBUG_RIB_DIFF = false;
 
   Batfish batfish;
   StorageProvider storage;
@@ -47,6 +47,8 @@ public class IncrementalSimulator {
   private int idx = 0;
   NetworkSnapshot currSnapshot;
   IbdpResult currDataPlaneResult;
+
+  private long checkingTime = 0;
 
   public IncrementalSimulator(Batfish batfish, StorageProvider storage) {
     this.batfish = batfish;
@@ -313,6 +315,7 @@ public class IncrementalSimulator {
   }
 
   private void checkSafety(NetworkSnapshot snapshot, DataPlane dataPlane, boolean expected) {
+    long start = System.nanoTime();
     // check control plane reachability
     boolean cp =
         dataPlane.getRibs().values().stream()
@@ -328,6 +331,7 @@ public class IncrementalSimulator {
     Set<Flow> loopFlows = batfish.bddLoopDetection(snapshot);
     boolean dp = loopFlows.isEmpty();
     assert (cp && dp) == expected;
+    checkingTime += System.nanoTime() - start;
   }
 
   private void diffMainRibs(IncrementalDataPlane prev, IncrementalDataPlane next) {
@@ -381,5 +385,9 @@ public class IncrementalSimulator {
 
   public BgpTopology getBgpTopology() {
     return initDataPlaneResult._topologies.getBgpTopology();
+  }
+
+  public long getCheckingTime() {
+    return checkingTime;
   }
 }
