@@ -1,11 +1,13 @@
 package org.batfish.main;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.batfish.datamodel.Configuration;
 import org.batfish.datamodel.bgp.BgpTopology;
 import org.batfish.dataplane.ibdp.IncrementalSimulator;
+import org.batfish.storage.StorageProvider;
 import org.batfish.utils.BatfishUtil;
 
 import java.io.File;
@@ -41,18 +43,19 @@ public class Main {
       String name,
       Map<String, Configuration> initialConfigs,
       Map<String, Configuration> finalConfigs) {
-    Pair<Path, Batfish> initialPair =
+    Triple<Path, StorageProvider, Batfish> initialPair =
         BatfishUtil.getBatfishFromConfiguration(
-            BatfishUtil.OUTPUT_BASE, name + "-initial", new TreeMap<>(initialConfigs), null, false);
+            BatfishUtil.OUTPUT_BASE, name, "initial", new TreeMap<>(initialConfigs), null, false);
     Batfish initialBatfish = initialPair.getRight();
-    IncrementalSimulator simulator = new IncrementalSimulator(initialBatfish);
+    IncrementalSimulator simulator =
+        new IncrementalSimulator(initialBatfish, initialPair.getMiddle());
     simulator.computeInitialDataPlane();
 
     BgpTopology finalBgpTopology = simulator.getBgpTopology();
     if (finalConfigs != null) {
-      Pair<Path, Batfish> finalPair =
+      Triple<Path, StorageProvider, Batfish> finalPair =
           BatfishUtil.getBatfishFromConfiguration(
-              BatfishUtil.OUTPUT_BASE, name + "-final", new TreeMap<>(finalConfigs), null, false);
+              BatfishUtil.OUTPUT_BASE, name, "final", new TreeMap<>(finalConfigs), null, false);
       Batfish finalBatfish = finalPair.getRight();
       finalBatfish.computeDataPlane(finalBatfish.getSnapshot());
       finalBgpTopology =

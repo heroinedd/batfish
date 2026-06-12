@@ -20,7 +20,7 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 import org.apache.commons.collections4.map.LRUMap;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.batfish.common.BatfishLogger;
@@ -34,6 +34,7 @@ import org.batfish.datamodel.collections.BgpAdvertisementsByVrf;
 import org.batfish.dataplane.ibdp.IncrementalDataPlanePlugin;
 import org.batfish.main.Batfish;
 import org.batfish.storage.FileBasedStorage;
+import org.batfish.storage.StorageProvider;
 import org.batfish.vendor.VendorConfiguration;
 
 public class BatfishUtil {
@@ -156,7 +157,7 @@ public class BatfishUtil {
    * @param useCache whether use cached vendor independent {@link Configuration}s or not.
    * @return a pair of (1) snapshot output folder, and (2) the batfish object
    */
-  public static Pair<Path, Batfish> getBatfishFromTestrigText(
+  public static Triple<Path, StorageProvider, Batfish> getBatfishFromTestrigText(
       Path storageBase,
       String networkName,
       String snapshotName,
@@ -174,7 +175,7 @@ public class BatfishUtil {
             .build());
   }
 
-  public static Pair<Path, Batfish> getBatfishFromTestrigText(Param param) {
+  public static Triple<Path, StorageProvider, Batfish> getBatfishFromTestrigText(Param param) {
     initContainer(param.storageBase, param.networkName, param.snapshotName, param.useCache);
 
     Settings settings = settings(param.storageBase, param.networkName, param.snapshotName);
@@ -193,6 +194,10 @@ public class BatfishUtil {
       }
     }
 
+    StorageProvider storage =
+        new FileBasedStorage(
+            Objects.requireNonNull(settings.getStorageBase()), settings.getLogger());
+
     Batfish batfish =
         new Batfish(
             settings,
@@ -200,22 +205,22 @@ public class BatfishUtil {
             makeDataPlaneCache(),
             makeEnvBgpCache(),
             makeVendorConfigurationCache(),
-            new FileBasedStorage(
-                Objects.requireNonNull(settings.getStorageBase()), settings.getLogger()),
+            storage,
             null);
 
     registerDataPlanePlugins(batfish);
 
-    return Pair.of(snapshotDir, batfish);
+    return Triple.of(snapshotDir, storage, batfish);
   }
 
-  public static Pair<Path, Batfish> getBatfishFromConfiguration(
+  public static Triple<Path, StorageProvider, Batfish> getBatfishFromConfiguration(
       Path storageBase,
       String networkName,
+      @Nullable String snapshotName,
       SortedMap<String, Configuration> configurations,
       @Nullable Path layer1Topology,
       boolean useCache) {
-    String snapshotName = timestamp();
+    if (snapshotName == null) snapshotName = timestamp();
 
     initContainer(storageBase, networkName, snapshotName, useCache);
 
@@ -238,6 +243,10 @@ public class BatfishUtil {
             Objects.requireNonNull(settings.getTestrig()));
     testrigCache.put(snapshot, configurations);
 
+    StorageProvider storage =
+        new FileBasedStorage(
+            Objects.requireNonNull(settings.getStorageBase()), settings.getLogger());
+
     Batfish batfish =
         new Batfish(
             settings,
@@ -245,13 +254,12 @@ public class BatfishUtil {
             makeDataPlaneCache(),
             makeEnvBgpCache(),
             makeVendorConfigurationCache(),
-            new FileBasedStorage(
-                Objects.requireNonNull(settings.getStorageBase()), settings.getLogger()),
+            storage,
             null);
 
     registerDataPlanePlugins(batfish);
 
-    return Pair.of(snapshotDir, batfish);
+    return Triple.of(snapshotDir, storage, batfish);
   }
 
   public static Settings settings(Path storageBase, String networkName, String snapshotName) {
