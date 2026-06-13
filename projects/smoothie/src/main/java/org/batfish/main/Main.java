@@ -15,7 +15,6 @@ import org.batfish.storage.StorageProvider;
 import org.batfish.utils.BatfishUtil;
 import org.batfish.utils.SmoothieConfig;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
@@ -30,16 +29,20 @@ public class Main {
    *
    * @return a pair of (reflector IDs, steps)
    */
-  private static Pair<List<Integer>, List<TraceParser.Step>> loadTrace(String name, String suffix)
-      throws IOException {
-    Path tracePath = TRACES_DIR.resolve(name + "-" + suffix + ".json");
-    Pair<List<Integer>, List<TraceParser.Step>> parsed = TraceParser.parse(tracePath);
-    LOGGER.info(
-        "Loaded {} steps from {}, reflectors: {}",
-        parsed.getRight().size(),
-        tracePath.getFileName(),
-        parsed.getLeft());
-    return parsed;
+  private static Pair<List<Integer>, List<TraceParser.Step>> loadTrace(String name, String suffix) {
+    try {
+      Path tracePath = TRACES_DIR.resolve(name + "-" + suffix + ".json");
+      Pair<List<Integer>, List<TraceParser.Step>> parsed = TraceParser.parse(tracePath);
+      LOGGER.info(
+          "Loaded {} steps from {}, reflectors: {}",
+          parsed.getRight().size(),
+          tracePath.getFileName(),
+          parsed.getLeft());
+      return parsed;
+    } catch (IOException e) {
+      LOGGER.error(e);
+      return null;
+    }
   }
 
   private static long time = 0;
@@ -74,14 +77,15 @@ public class Main {
     time = System.nanoTime() - start;
     BgpTopology finalBgpTopology = batfish.getTopologyProvider().getBgpTopology(finalSnapshot);
 
-    return new TraceExecutor(simulator, batfish, finalBgpTopology);
+    return new TraceExecutor(triple.getLeft().getParent(), simulator, batfish, finalBgpTopology);
   }
 
-  public static void fm2rr(String name) throws IOException {
+  public static void fm2rr(String name) {
     long start = System.nanoTime();
     LOGGER.info("{}-FM2RR starts", name);
 
     Pair<List<Integer>, List<TraceParser.Step>> parsed = loadTrace(name, "FM2RR");
+    if (parsed == null) return;
     List<Integer> reflectors = parsed.getLeft();
     List<TraceParser.Step> steps = parsed.getRight();
 
@@ -91,18 +95,19 @@ public class Main {
     TraceExecutor executor = getExecutor(name, initialConfigs, finalConfigs);
     executor.execute(steps);
 
-    // simulator.checkSafety();
     double duration = (System.nanoTime() - start - time) / 1e9;
     double checkingTime = executor.getCheckingTime() / 1e9;
     LOGGER.info("{}-FM2RR finish in {}s", name, duration);
     System.out.printf("%s-FM2RR\t%f\t%f\n", name, checkingTime, duration);
+    executor.cleanOutput();
   }
 
-  public static void rrx2(String name) throws IOException {
+  public static void rrx2(String name) {
     long start = System.nanoTime();
     LOGGER.info("{}-RRx2 starts", name);
 
     Pair<List<Integer>, List<TraceParser.Step>> parsed = loadTrace(name, "RRx2");
+    if (parsed == null) return;
     List<Integer> reflectors = parsed.getLeft();
     List<TraceParser.Step> steps = parsed.getRight();
 
@@ -112,18 +117,19 @@ public class Main {
     TraceExecutor executor = getExecutor(name, initialConfigs, finalConfigs);
     executor.execute(steps);
 
-    // simulator.checkSafety();
     double duration = (System.nanoTime() - start - time) / 1e9;
     double checkingTime = executor.getCheckingTime() / 1e9;
     LOGGER.info("{}-RRx2 finish in {}s", name, duration);
     System.out.printf("%s-RRx2\t%f\t%f\n", name, checkingTime, duration);
+    executor.cleanOutput();
   }
 
-  public static void netAcq(String name) throws IOException {
+  public static void netAcq(String name) {
     long start = System.nanoTime();
     LOGGER.info("{}-NetAcq starts", name);
 
     Pair<List<Integer>, List<TraceParser.Step>> parsed = loadTrace(name, "NetAcq");
+    if (parsed == null) return;
     List<TraceParser.Step> steps = parsed.getRight();
 
     Map<String, Configuration> initialConfigs = TopologyZoo.init(name, true, false);
@@ -133,18 +139,19 @@ public class Main {
     TraceExecutor executor = getExecutor(name, initialConfigs, finalConfigs);
     executor.execute(steps);
 
-    // simulator.checkSafety();
     double duration = (System.nanoTime() - start - time) / 1e9;
     double checkingTime = executor.getCheckingTime() / 1e9;
     LOGGER.info("{}-NetAcq finish in {}s", name, duration);
     System.out.printf("%s-NetAcq\t%f\t%f\n", name, checkingTime, duration);
+    executor.cleanOutput();
   }
 
-  public static void igpx2(String name) throws IOException {
+  public static void igpx2(String name) {
     long start = System.nanoTime();
     LOGGER.info("{}-IGPx2 starts", name);
 
     Pair<List<Integer>, List<TraceParser.Step>> parsed = loadTrace(name, "IGPx2");
+    if (parsed == null) return;
     List<TraceParser.Step> steps = parsed.getRight();
 
     Map<String, Configuration> configs = TopologyZoo.init(name, false, null);
@@ -157,13 +164,15 @@ public class Main {
     double checkingTime = executor.getCheckingTime() / 1e9;
     LOGGER.info("{}-IGPx2 finish in {}s", name, duration);
     System.out.printf("%s-IGPx2\t%f\t%f\n", name, checkingTime, duration);
+    executor.cleanOutput();
   }
 
-  public static void lpx2(String name) throws IOException {
+  public static void lpx2(String name) {
     long start = System.nanoTime();
     LOGGER.info("{}-LPx2 starts", name);
 
     Pair<List<Integer>, List<TraceParser.Step>> parsed = loadTrace(name, "LPx2");
+    if (parsed == null) return;
     List<Integer> reflectors = parsed.getLeft();
     List<TraceParser.Step> steps = parsed.getRight();
 
@@ -177,23 +186,19 @@ public class Main {
     double checkingTime = executor.getCheckingTime() / 1e9;
     LOGGER.info("{}-LPx2 finish in {}s", name, duration);
     System.out.printf("%s-LPx2\t%f\t%f\n", name, checkingTime, duration);
+    executor.cleanOutput();
   }
 
   public static void main(String[] args) {
-    List<String> files =
-        Arrays.stream(
-                Objects.requireNonNull(
-                    new File(SmoothieConfig.topologiesDir().toString()).list()))
-            .sorted()
-            .toList();
-    for (String file : files) {
-      if (file.toLowerCase().contains("example")) continue;
-      String name = file.split("\\.")[0];
-      try {
-        fm2rr(name);
-        break;
-      } catch (IOException ignored) {
-      }
+    String name = args[0];
+    String scenario = args[1];
+    switch (scenario.toLowerCase()) {
+      case "fm2rr" -> fm2rr(name);
+      case "rrx2" -> rrx2(name);
+      case "igpx2" -> igpx2(name);
+      case "lpx2" -> lpx2(name);
+      case "netacq" -> netAcq(name);
+      default -> throw new IllegalArgumentException("Scenario " + scenario + " not recognized");
     }
   }
 }
