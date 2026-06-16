@@ -1,6 +1,7 @@
 package org.batfish.dataplane.ibdp;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Table;
 import com.google.common.graph.EndpointPair;
 import com.google.common.graph.MutableValueGraph;
 import com.google.common.graph.ValueGraph;
@@ -37,6 +38,7 @@ public class IncrementalSimulator {
   private static final Logger LOGGER = LogManager.getLogger(IncrementalSimulator.class);
 
   public static boolean DEBUG_RIB_DIFF = false;
+  public static boolean OPTIMIZE = true;
 
   Batfish batfish;
   StorageProvider storage;
@@ -47,6 +49,7 @@ public class IncrementalSimulator {
   private int idx = 0;
   NetworkSnapshot currSnapshot;
   IbdpResult currDataPlaneResult;
+  LoopDetection detection;
 
   private long checkingTime = 0;
   private long ioTime = 0;
@@ -60,7 +63,9 @@ public class IncrementalSimulator {
             .flatMap(c -> c.getVrfs().values().stream())
             .filter(vr -> vr.getBgpProcess() != null)
             .map(vr -> vr.getBgpProcess().getOriginationSpace())
+            .filter(ps -> !ps.isEmpty())
             .collect(Collectors.toSet());
+    this.detection = new LoopDetection();
   }
 
   public void computeInitialDataPlane() {
@@ -108,7 +113,7 @@ public class IncrementalSimulator {
 
     // step4: update the current data plane
     updateCurrentDataplane(nodes, vrs, updatedTopologyContext);
-    checkSafety(currSnapshot, currDataPlaneResult._dataPlane, expected);
+    checkSafety(expected);
   }
 
   /** Incremental simulation after modifying the OSPF link weight. */
@@ -177,7 +182,7 @@ public class IncrementalSimulator {
 
     // step4: update the current data plane
     updateCurrentDataplane(nodes, vrs, topologyContext);
-    checkSafety(currSnapshot, currDataPlaneResult._dataPlane, expected);
+    checkSafety(expected);
   }
 
   /**
@@ -246,7 +251,7 @@ public class IncrementalSimulator {
 
     // step5: update the current data plane
     updateCurrentDataplane(nodes, vrs, topologyContext);
-    checkSafety(currSnapshot, currDataPlaneResult._dataPlane, expected);
+    checkSafety(expected);
   }
 
   private void simulateBgp(
@@ -283,23 +288,25 @@ public class IncrementalSimulator {
             .setPartialDataplane(partialDataplane)
             .build();
 
-    // store configurations and data plane into a new snapshot
+    // initialize a new snapshot
     NetworkSnapshot newSnapshot =
         new NetworkSnapshot(currSnapshot.getNetwork(), new SnapshotId("step" + idx++));
-    long start = System.nanoTime();
-    try {
-      storage.storeConfigurations(
-          nodes.entrySet().stream()
-              .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getConfiguration())),
-          new ConvertConfigurationAnswerElement(),
-          null,
-          newSnapshot.getNetwork(),
-          newSnapshot.getSnapshot());
-    } catch (Exception e) {
-      LOGGER.error(e.getMessage());
+    if (!OPTIMIZE) {
+      // store configurations and data plane into the new snapshot
+      long start = System.nanoTime();
+      try {
+        storage.storeConfigurations(
+            getConfigs(nodes),
+            new ConvertConfigurationAnswerElement(),
+            null,
+            newSnapshot.getNetwork(),
+            newSnapshot.getSnapshot());
+      } catch (Exception e) {
+        LOGGER.error(e.getMessage());
+      }
+      batfish.saveDataPlane(newSnapshot, incrementalDataPlane, topologyContext);
+      ioTime += System.nanoTime() - start;
     }
-    batfish.saveDataPlane(newSnapshot, incrementalDataPlane, topologyContext);
-    ioTime += System.nanoTime() - start;
 
     // debug rib diffs
     if (DEBUG_RIB_DIFF) {
@@ -317,11 +324,11 @@ public class IncrementalSimulator {
             currDataPlaneResult.getIpOwners());
   }
 
-  private void checkSafety(NetworkSnapshot snapshot, DataPlane dataPlane, boolean expected) {
+  private void checkSafety(boolean expected) {
     long start = System.nanoTime();
     // check control plane reachability
     boolean cp =
-        dataPlane.getRibs().values().stream()
+        currDataPlaneResult._dataPlane.getRibs().values().stream()
             .allMatch(
                 rib ->
                     prefixSpaces.stream()
@@ -331,9 +338,38 @@ public class IncrementalSimulator {
                                     .anyMatch(route -> ps.containsPrefix(route.getNetwork()))));
 
     // detect data plane forwarding loop
-    Set<Flow> loopFlows = batfish.bddLoopDetection(snapshot);
+    Set<Flow> loopFlows =
+        OPTIMIZE
+            ? detection.bddLoopDetection(
+                batfish,
+                currDataPlaneResult._dataPlane,
+                getConfigs(currDataPlaneResult.getNodes()),
+                currDataPlaneResult.getIpOwners())
+            : batfish.bddLoopDetection(currSnapshot);
     boolean dp = loopFlows.isEmpty();
-    assert (cp && dp) == expected;
+
+    if ((cp && dp) != expected) {
+      System.err.printf(
+          "unexpected property checking result, expected %s, got %s\n", expected, (cp & dp));
+      if (cp != expected) {
+        for (Table.Cell<String, String, FinalMainRib> cell :
+            currDataPlaneResult._dataPlane.getRibs().cellSet()) {
+          for (PrefixSpace ps : prefixSpaces) {
+            boolean flag =
+                cell.getValue().getRoutes().stream()
+                    .anyMatch(route -> ps.containsPrefix(route.getNetwork()));
+            if (!flag) {
+              System.err.printf(
+                  "Vrf(%s, %s) does not have route for %s\n",
+                  cell.getRowKey(), cell.getColumnKey(), ps);
+            }
+          }
+        }
+      }
+      if (dp != expected) {
+        loopFlows.forEach(System.out::println);
+      }
+    }
     checkingTime += System.nanoTime() - start;
   }
 
@@ -388,6 +424,11 @@ public class IncrementalSimulator {
 
   public BgpTopology getBgpTopology() {
     return initDataPlaneResult._topologies.getBgpTopology();
+  }
+
+  private static Map<String, Configuration> getConfigs(Map<String, Node> nodes) {
+    return nodes.entrySet().stream()
+        .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getConfiguration()));
   }
 
   public long getCheckingTime() {

@@ -49,6 +49,8 @@ java_library(
     deps = [
         "//projects/batfish",
         "//projects/batfish-common-protocol:common",
+        "//projects/bdd/src/main/java/net/sf/javabdd",
+        "//projects/symbolic/src/main/java/org/batfish/symbolic:core",
         "@maven//:com_github_ben_manes_caffeine_caffeine",
         "@maven//:com_google_code_findbugs_jsr305",
         "@maven//:com_google_code_gson_gson",
