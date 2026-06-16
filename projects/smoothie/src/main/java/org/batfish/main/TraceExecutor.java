@@ -228,6 +228,10 @@ public class TraceExecutor {
     return simulator.getCheckingTime();
   }
 
+  public long getIoTime() {
+    return simulator.getIoTime();
+  }
+
   public void cleanOutput() {
     try {
       FileUtils.deleteDirectory(base.toFile());

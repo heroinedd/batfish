@@ -49,6 +49,7 @@ public class IncrementalSimulator {
   IbdpResult currDataPlaneResult;
 
   private long checkingTime = 0;
+  private long ioTime = 0;
 
   public IncrementalSimulator(Batfish batfish, StorageProvider storage) {
     this.batfish = batfish;
@@ -285,6 +286,7 @@ public class IncrementalSimulator {
     // store configurations and data plane into a new snapshot
     NetworkSnapshot newSnapshot =
         new NetworkSnapshot(currSnapshot.getNetwork(), new SnapshotId("step" + idx++));
+    long start = System.nanoTime();
     try {
       storage.storeConfigurations(
           nodes.entrySet().stream()
@@ -297,6 +299,7 @@ public class IncrementalSimulator {
       LOGGER.error(e.getMessage());
     }
     batfish.saveDataPlane(newSnapshot, incrementalDataPlane, topologyContext);
+    ioTime += System.nanoTime() - start;
 
     // debug rib diffs
     if (DEBUG_RIB_DIFF) {
@@ -389,5 +392,9 @@ public class IncrementalSimulator {
 
   public long getCheckingTime() {
     return checkingTime;
+  }
+
+  public long getIoTime() {
+    return ioTime;
   }
 }

@@ -80,6 +80,15 @@ public class Main {
     return new TraceExecutor(triple.getLeft().getParent(), simulator, batfish, finalBgpTopology);
   }
 
+  private static void finishUp(
+      String name, String suffix, TraceExecutor executor, double duration) {
+    double ioTime = executor.getIoTime() / 1e9;
+    double checkingTime = executor.getCheckingTime() / 1e9;
+    LOGGER.info("{}-{} finish in {}s", name, suffix, duration);
+    System.out.printf("%s-%s\t%f\t%f\t%f\n", name, suffix, ioTime, checkingTime, duration);
+    executor.cleanOutput();
+  }
+
   public static void fm2rr(String name) {
     long start = System.nanoTime();
     LOGGER.info("{}-FM2RR starts", name);
@@ -96,10 +105,7 @@ public class Main {
     executor.execute(steps);
 
     double duration = (System.nanoTime() - start - time) / 1e9;
-    double checkingTime = executor.getCheckingTime() / 1e9;
-    LOGGER.info("{}-FM2RR finish in {}s", name, duration);
-    System.out.printf("%s-FM2RR\t%f\t%f\n", name, checkingTime, duration);
-    executor.cleanOutput();
+    finishUp(name, "FM2RR", executor, duration);
   }
 
   public static void rrx2(String name) {
@@ -118,10 +124,7 @@ public class Main {
     executor.execute(steps);
 
     double duration = (System.nanoTime() - start - time) / 1e9;
-    double checkingTime = executor.getCheckingTime() / 1e9;
-    LOGGER.info("{}-RRx2 finish in {}s", name, duration);
-    System.out.printf("%s-RRx2\t%f\t%f\n", name, checkingTime, duration);
-    executor.cleanOutput();
+    finishUp(name, "RRx2", executor, duration);
   }
 
   public static void netAcq(String name) {
@@ -140,10 +143,7 @@ public class Main {
     executor.execute(steps);
 
     double duration = (System.nanoTime() - start - time) / 1e9;
-    double checkingTime = executor.getCheckingTime() / 1e9;
-    LOGGER.info("{}-NetAcq finish in {}s", name, duration);
-    System.out.printf("%s-NetAcq\t%f\t%f\n", name, checkingTime, duration);
-    executor.cleanOutput();
+    finishUp(name, "NetAcq", executor, duration);
   }
 
   public static void igpx2(String name) {
@@ -161,10 +161,7 @@ public class Main {
     executor.execute(steps);
 
     double duration = (System.nanoTime() - start - time) / 1e9;
-    double checkingTime = executor.getCheckingTime() / 1e9;
-    LOGGER.info("{}-IGPx2 finish in {}s", name, duration);
-    System.out.printf("%s-IGPx2\t%f\t%f\n", name, checkingTime, duration);
-    executor.cleanOutput();
+    finishUp(name, "IGPx2", executor, duration);
   }
 
   public static void lpx2(String name) {
@@ -183,10 +180,7 @@ public class Main {
     executor.execute(steps);
 
     double duration = (System.nanoTime() - start - time) / 1e9;
-    double checkingTime = executor.getCheckingTime() / 1e9;
-    LOGGER.info("{}-LPx2 finish in {}s", name, duration);
-    System.out.printf("%s-LPx2\t%f\t%f\n", name, checkingTime, duration);
-    executor.cleanOutput();
+    finishUp(name, "LPx2", executor, duration);
   }
 
   public static void main(String[] args) {
