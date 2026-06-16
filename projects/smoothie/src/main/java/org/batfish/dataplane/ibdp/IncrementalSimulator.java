@@ -90,15 +90,19 @@ public class IncrementalSimulator {
     TopologyContext topologyContext = (TopologyContext) currDataPlaneResult._topologies;
     ValueGraph<BgpPeerConfigId, BgpSessionProperties> originalGraph =
         topologyContext.getBgpTopology().getGraph();
+    // step1.1: collect edges
+    Map<EndpointPair<BgpPeerConfigId>, BgpSessionProperties> edges =
+        originalGraph.edges().stream()
+            .collect(Collectors.toMap(edge -> edge, edge -> originalGraph.edgeValue(edge).get()));
+    for (BgpSession session : sessions) {
+      EndpointPair<BgpPeerConfigId> e = EndpointPair.ordered(session.id1, session.id2);
+      if (session.properties == null) edges.remove(e);
+      else edges.put(e, session.properties);
+    }
+    // step1.2: build new graph
     MutableValueGraph<BgpPeerConfigId, BgpSessionProperties> newGraph =
         ValueGraphBuilder.directed().allowsSelfLoops(false).build();
-    originalGraph
-        .edges()
-        .forEach(edge -> newGraph.putEdgeValue(edge, originalGraph.edgeValue(edge).get()));
-    for (BgpSession session : sessions) {
-      if (session.properties == null) newGraph.removeEdge(session.id1, session.id2);
-      else newGraph.putEdgeValue(session.id1, session.id2, session.properties);
-    }
+    edges.forEach(newGraph::putEdgeValue);
     TopologyContext updatedTopologyContext =
         topologyContext.toBuilder().setBgpTopology(new BgpTopology(newGraph)).build();
 
