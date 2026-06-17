@@ -121,20 +121,16 @@ public class IncrementalSimulator {
   }
 
   /** Incremental simulation after modifying the OSPF link weight. */
-  public void modifyOspfLinkWeightAndSimulate(boolean expected, Edge edge, int weight) {
+  public void modifyOspfLinkWeightAndSimulate(
+      boolean expected, Edge edge, Double oldWeight, Double newWeight) {
     SortedMap<String, Node> nodes = new TreeMap<>(currDataPlaneResult.getNodes());
     List<VirtualRouter> vrs =
         toListInRandomOrder(nodes.values().stream().flatMap(n -> n.getVirtualRouters().stream()));
 
     // step1: update the interface ospf cost
-    Objects.requireNonNull(
-            nodes
-                .get(edge.getNode1())
-                .getConfiguration()
-                .getAllInterfaces()
-                .get(edge.getInt1())
-                .getOspfSettings())
-        .setCost(weight);
+    Interface iface =
+        nodes.get(edge.getNode1()).getConfiguration().getAllInterfaces().get(edge.getInt1());
+    modifyOspfLinkWeight(iface, oldWeight, newWeight);
     TopologyContext topologyContext = (TopologyContext) currDataPlaneResult._topologies;
 
     // step2: remove all OSPF routes and re-simulation of OSPF
@@ -411,15 +407,11 @@ public class IncrementalSimulator {
     if (identical[0]) LOGGER.info("[RIB diff] none");
   }
 
-  public int getOspfLinkWeight(Edge edge) {
-    return initDataPlaneResult
-        .getNodes()
-        .get(edge.getNode1())
-        .getConfiguration()
-        .getAllInterfaces()
-        .get(edge.getInt1())
-        .getOspfSettings()
-        .getCost();
+  public void modifyOspfLinkWeight(Interface iface, Double oldWeight, Double newWeight) {
+    int oldW = iface.getOspfSettings().getCost();
+    int newW = oldWeight == null ? newWeight.intValue() : (int) (oldW * newWeight / oldWeight);
+    iface.getOspfSettings().setCost(newW);
+    LOGGER.error("modify OSPF link weight from {} to {}", oldW, newW);
   }
 
   public Topology getLayer3Topology() {

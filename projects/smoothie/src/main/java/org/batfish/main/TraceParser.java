@@ -19,7 +19,10 @@ import org.apache.commons.lang3.tuple.Pair;
  */
 public class TraceParser {
 
-  /** One atomic step in the trace: a list of actions, whether this step is an undo, and whether it succeeded. */
+  /**
+   * One atomic step in the trace: a list of actions, whether this step is an undo, and whether it
+   * succeeded.
+   */
   public static class Step {
     public final List<TraceAction> actions;
     public final boolean isUndo;
@@ -93,7 +96,9 @@ public class TraceParser {
     switch (type) {
       case "igp_link_weight":
         return new TraceAction.ConfigExpr.IgpLinkWeight(
-            node.get("source").asInt(), node.get("target").asInt(), node.get("weight").asDouble());
+            node.get("source").asInt(),
+            node.get("target").asInt(),
+            node.get("weight").isNull() ? null : node.get("weight").asDouble());
       case "bgp_session":
         return new TraceAction.ConfigExpr.BgpSession(
             node.get("source").asInt(),

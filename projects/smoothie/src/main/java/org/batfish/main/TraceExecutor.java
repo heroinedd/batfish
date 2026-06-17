@@ -97,7 +97,7 @@ public class TraceExecutor {
 
   private void executeStep(List<TraceAction> actions, boolean isUndo, boolean expected) {
     for (TraceAction action : actions) {
-      LOGGER.info((isUndo ? "Undo " : "") + action.toString());
+      LOGGER.error((isUndo ? "Undo " : "") + action.toString());
       if (action instanceof TraceAction.Remove) {
         TraceAction.ConfigExpr expr = ((TraceAction.Remove) action).expr;
         if (expr instanceof TraceAction.ConfigExpr.BgpSession bgp) {
@@ -157,7 +157,9 @@ public class TraceExecutor {
             simulator.insertOrRemoveBgpSessionAndSimulate(
                 expected,
                 new BgpSession(oldFwd.id1, oldFwd.id2, null),
-                new BgpSession(oldRev.id1, oldRev.id2, null),
+                new BgpSession(oldRev.id1, oldRev.id2, null));
+            simulator.insertOrRemoveBgpSessionAndSimulate(
+                expected,
                 new BgpSession(newFwd.id1, newFwd.id2, newFwd.properties),
                 new BgpSession(newRev.id1, newRev.id2, newRev.properties));
           } else {
@@ -195,9 +197,7 @@ public class TraceExecutor {
     String tgtHostname = toHostname(from.target);
     for (Edge edge : simulator.getLayer3Topology().getEdges()) {
       if (edge.getNode1().equals(srcHostname) && edge.getNode2().equals(tgtHostname)) {
-        int current = simulator.getOspfLinkWeight(edge);
-        int updated = (int) (current * (to.weight / from.weight));
-        simulator.modifyOspfLinkWeightAndSimulate(expected, edge, updated);
+        simulator.modifyOspfLinkWeightAndSimulate(expected, edge, from.weight, to.weight);
         return;
       }
     }

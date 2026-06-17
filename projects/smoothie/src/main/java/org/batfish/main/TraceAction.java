@@ -1,5 +1,7 @@
 package org.batfish.main;
 
+import javax.annotation.Nullable;
+
 /** A modification to apply to the network configuration. Mirrors Rust's {@code ConfigModifier}. */
 public abstract class TraceAction {
 
@@ -22,9 +24,9 @@ public abstract class TraceAction {
     public static class IgpLinkWeight extends ConfigExpr {
       public final int source;
       public final int target;
-      public final double weight;
+      public final @Nullable Double weight;
 
-      public IgpLinkWeight(int source, int target, double weight) {
+      public IgpLinkWeight(int source, int target, @Nullable Double weight) {
         this.source = source;
         this.target = target;
         this.weight = weight;

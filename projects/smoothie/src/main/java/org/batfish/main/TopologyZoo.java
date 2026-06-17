@@ -2,7 +2,9 @@ package org.batfish.main;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.lang3.tuple.Pair;
 import org.batfish.datamodel.Configuration;
+import org.batfish.datamodel.Interface;
 import org.batfish.datamodel.Prefix;
 import org.batfish.utils.BatfishUtil;
 import org.batfish.utils.ConfigUtil;
@@ -99,15 +101,18 @@ public class TopologyZoo {
         .collect(Collectors.toMap(Configuration::getHostname, c -> c));
   }
 
-  /** Synthesize iBGP configurations with two router reflectors. */
-  public static Map<String, Configuration> init(String name, boolean isolate, boolean metis) {
+  /**
+   * Synthesize iBGP configurations with two router reflectors. Only RRx2 and NetAcq will call this
+   * function.
+   */
+  public static Map<String, Configuration> init(String name, boolean isolate, boolean rrx2) {
     SimpleWeightedGraph<GmlUtil.Node, GmlUtil.Edge> g = GmlUtil.readTopology(name, -1);
 
     int[] rr1 = {0}, rr2 = {0};
     List<Integer> sub1 = Collections.emptyList(), sub2 = Collections.emptyList();
     try {
       Path path =
-          BatfishUtil.INPUT_BASE.resolve(name).resolve(metis ? "metis.json" : "subnetworks.json");
+          BatfishUtil.INPUT_BASE.resolve(name).resolve(rrx2 ? "metis.json" : "subnetworks.json");
       ObjectMapper mapper = new ObjectMapper();
       JsonNode root = mapper.readTree(path.toFile());
       rr1[0] = root.get("0").get(0).get("rr").asInt();
@@ -131,6 +136,7 @@ public class TopologyZoo {
     }
 
     // edges
+    Map<GmlUtil.Edge, Pair<Interface, Interface>> map = new HashMap<>();
     for (GmlUtil.Edge edge : g.edgeSet()) {
       GmlUtil.Node n1 = g.getEdgeSource(edge);
       GmlUtil.Node n2 = g.getEdgeTarget(edge);
@@ -139,11 +145,33 @@ public class TopologyZoo {
       String subnet =
           String.format(
               "10.%d.%d", Math.min(n1.getId(), n2.getId()), Math.max(n1.getId(), n2.getId()));
-      edge(c1, c2, CISCO_ETH + n2.getId(), CISCO_ETH + n1.getId(), subnet);
+      map.put(edge, edge(c1, c2, CISCO_ETH + n2.getId(), CISCO_ETH + n1.getId(), subnet));
     }
 
-    // ospf and bgp processes
+    // ospf bgp processes
     configurations.values().forEach(ConfigUtil::ospfProcess);
+
+    // interface ospf cost
+    int lw = g.edgeSet().size() * 100;
+    if (!rrx2 && isolate) {
+      // NetAcq initial
+      for (GmlUtil.Edge edge : g.edgeSet()) {
+        GmlUtil.Node n1 = g.getEdgeSource(edge);
+        GmlUtil.Node n2 = g.getEdgeTarget(edge);
+        if (externals.contains(n1.getId()) || externals.contains(n2.getId())) continue;
+        if (sub2.contains(n1.getId()) && sub2.contains(n2.getId())) {
+          Objects.requireNonNull(map.get(edge).getKey().getOspfSettings()).setCost(2);
+          Objects.requireNonNull(map.get(edge).getValue().getOspfSettings()).setCost(2);
+        }
+        if ((sub1.contains(n1.getId()) && sub2.contains(n2.getId()))
+            || (sub1.contains(n2.getId()) && sub2.contains(n1.getId()))) {
+          Objects.requireNonNull(map.get(edge).getKey().getOspfSettings()).setCost(lw);
+          Objects.requireNonNull(map.get(edge).getValue().getOspfSettings()).setCost(lw);
+        }
+      }
+    }
+
+    // bgp processes
     Set<Prefix> prefixes = Set.of(Prefix.parse("70.0.0.0/24"));
     configurations.forEach(
         (key, value) ->
