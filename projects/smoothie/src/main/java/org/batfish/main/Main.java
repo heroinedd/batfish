@@ -1,18 +1,9 @@
 package org.batfish.main;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.batfish.common.NetworkSnapshot;
 import org.batfish.datamodel.Configuration;
-import org.batfish.datamodel.answers.ConvertConfigurationAnswerElement;
-import org.batfish.datamodel.bgp.BgpTopology;
-import org.batfish.dataplane.ibdp.IncrementalSimulator;
-import org.batfish.identifiers.NetworkId;
-import org.batfish.identifiers.SnapshotId;
-import org.batfish.storage.StorageProvider;
-import org.batfish.utils.BatfishUtil;
 import org.batfish.utils.SmoothieConfig;
 
 import java.io.IOException;
@@ -47,42 +38,6 @@ public class Main {
     }
   }
 
-  private static long time = 0;
-
-  private static TraceExecutor getExecutor(
-      String name,
-      Map<String, Configuration> initialConfigs,
-      Map<String, Configuration> finalConfigs) {
-    Triple<Path, StorageProvider, Batfish> triple =
-        BatfishUtil.getBatfishFromConfiguration(
-            BatfishUtil.OUTPUT_BASE, name, "initial", new TreeMap<>(initialConfigs), null, false);
-    Batfish batfish = triple.getRight();
-    IncrementalSimulator simulator = new IncrementalSimulator(batfish, triple.getMiddle());
-    simulator.computeInitialDataPlane();
-    simulator.checkSafety(true);
-
-    NetworkSnapshot finalSnapshot =
-        new NetworkSnapshot(new NetworkId(name), new SnapshotId("final"));
-    try {
-      triple
-          .getMiddle()
-          .storeConfigurations(
-              finalConfigs == null ? initialConfigs : finalConfigs,
-              new ConvertConfigurationAnswerElement(),
-              null,
-              finalSnapshot.getNetwork(),
-              finalSnapshot.getSnapshot());
-    } catch (IOException e) {
-      LOGGER.error("Could not save final configurations for {}: {}", name, e.getMessage());
-    }
-    long start = System.nanoTime();
-    batfish.computeDataPlane(finalSnapshot);
-    time = System.nanoTime() - start;
-    BgpTopology finalBgpTopology = batfish.getTopologyProvider().getBgpTopology(finalSnapshot);
-
-    return new TraceExecutor(triple.getLeft().getParent(), simulator, batfish, finalBgpTopology);
-  }
-
   private static void finishUp(
       String name, String suffix, TraceExecutor executor, double duration) {
     double ioTime = executor.getIoTime() / 1e9;
@@ -105,10 +60,10 @@ public class Main {
     Map<String, Configuration> finalConfigs =
         TopologyZoo.init(name, false, subnetworks.get(0).get(0));
 
-    TraceExecutor executor = getExecutor(name, initialConfigs, finalConfigs);
+    TraceExecutor executor = new TraceExecutor(name, initialConfigs, finalConfigs);
     executor.execute(steps);
 
-    double duration = (System.nanoTime() - start - time) / 1e9;
+    double duration = (System.nanoTime() - start - executor.getFinalTime()) / 1e9;
     finishUp(name, "FM2RR", executor, duration);
   }
 
@@ -125,10 +80,10 @@ public class Main {
         TopologyZoo.init(name, false, subnetworks.get(0).get(0));
     Map<String, Configuration> finalConfigs = TopologyZoo.doubleRouteReflectorFinalConfig(name);
 
-    TraceExecutor executor = getExecutor(name, initialConfigs, finalConfigs);
+    TraceExecutor executor = new TraceExecutor(name, initialConfigs, finalConfigs);
     executor.execute(steps);
 
-    double duration = (System.nanoTime() - start - time) / 1e9;
+    double duration = (System.nanoTime() - start - executor.getFinalTime()) / 1e9;
     finishUp(name, "RRx2", executor, duration);
   }
 
@@ -147,10 +102,10 @@ public class Main {
         TopologyZoo.networkAcquisitionConfig(name, subnetworks, false);
 
     // NetAcq traces have no BGP session changes, so finalBgpTopology == initial
-    TraceExecutor executor = getExecutor(name, initialConfigs, finalConfigs);
+    TraceExecutor executor = new TraceExecutor(name, initialConfigs, finalConfigs);
     executor.execute(steps);
 
-    double duration = (System.nanoTime() - start - time) / 1e9;
+    double duration = (System.nanoTime() - start - executor.getFinalTime()) / 1e9;
     finishUp(name, "NetAcq", executor, duration);
   }
 
@@ -170,10 +125,10 @@ public class Main {
     Map<String, Configuration> configs = TopologyZoo.init(name, false, rrId);
 
     // IGPx2 and LPx2 traces have no BGP session changes, so finalBgpTopology == initial
-    TraceExecutor executor = getExecutor(name, configs, null);
+    TraceExecutor executor = new TraceExecutor(name, configs, null);
     executor.execute(steps);
 
-    double duration = (System.nanoTime() - start - time) / 1e9;
+    double duration = (System.nanoTime() - start - executor.getFinalTime()) / 1e9;
     finishUp(name, suffix, executor, duration);
   }
 

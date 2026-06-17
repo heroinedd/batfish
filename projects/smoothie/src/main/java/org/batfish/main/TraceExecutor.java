@@ -2,10 +2,12 @@ package org.batfish.main;
 
 import com.google.common.graph.EndpointPair;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.batfish.datamodel.BgpPeerConfigId;
-import org.batfish.datamodel.Edge;
+import org.batfish.common.NetworkSnapshot;
+import org.batfish.datamodel.*;
+import org.batfish.datamodel.answers.ConvertConfigurationAnswerElement;
 import org.batfish.datamodel.bgp.BgpTopology;
 import org.batfish.datamodel.routing_policy.RoutingPolicy;
 import org.batfish.datamodel.routing_policy.expr.LiteralLong;
@@ -13,13 +15,15 @@ import org.batfish.datamodel.routing_policy.statement.SetLocalPreference;
 import org.batfish.datamodel.routing_policy.statement.Statements;
 import org.batfish.dataplane.ibdp.BgpSession;
 import org.batfish.dataplane.ibdp.IncrementalSimulator;
+import org.batfish.identifiers.NetworkId;
+import org.batfish.identifiers.SnapshotId;
+import org.batfish.storage.StorageProvider;
+import org.batfish.utils.BatfishUtil;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Translates a parsed Snowcap trace ({@link TraceParser}) into {@link IncrementalSimulator} calls.
@@ -50,38 +54,82 @@ public class TraceExecutor {
 
   private final Path base;
   private final IncrementalSimulator simulator;
-  private final Set<String> hostnames;
+
+  private final Map<String, Configuration> initialConfigs;
 
   /** sourceHostname → targetHostname → BgpSession (from initial topology) */
   private final Map<String, Map<String, BgpSession>> initSessionCache = new HashMap<>();
 
+  private final long initialTime;
+
+  private final Map<String, Configuration> finalConfigs;
+
   /** sourceHostname → targetHostname → BgpSession (from final topology) */
   private final Map<String, Map<String, BgpSession>> finalSessionCache = new HashMap<>();
 
-  /**
-   * @param simulator wraps the initial-topology data plane being incrementally updated
-   * @param initialBatfish used to look up configurations and the initial BGP topology
-   * @param finalBgpTopology the target BGP topology; used to resolve {@code Insert} sessions
-   */
+  private final long finalTime;
+
   public TraceExecutor(
-      Path base,
-      IncrementalSimulator simulator,
-      Batfish initialBatfish,
-      BgpTopology finalBgpTopology) {
-    this.base = base;
-    this.simulator = simulator;
-    this.hostnames = initialBatfish.loadConfigurations(initialBatfish.getSnapshot()).keySet();
-    buildSessionCache(simulator.getBgpTopology(), initSessionCache);
-    buildSessionCache(finalBgpTopology, finalSessionCache);
+      String name,
+      Map<String, Configuration> initialCfgs,
+      @Nullable Map<String, Configuration> finalCfgs) {
+    initialConfigs = initialCfgs;
+    finalConfigs = finalCfgs == null ? initialCfgs : finalCfgs;
+
+    Triple<Path, StorageProvider, Batfish> triple =
+        BatfishUtil.getBatfishFromConfiguration(
+            BatfishUtil.OUTPUT_BASE, name, "initial", new TreeMap<>(initialConfigs), null, false);
+    base = triple.getLeft();
+    Batfish batfish = triple.getRight();
+    simulator = new IncrementalSimulator(batfish, triple.getMiddle());
+
+    // simulate the initial control plane
+    long start = System.nanoTime();
+    simulator.computeInitialDataPlane();
+    simulator.checkSafety(true);
+    initialTime = System.nanoTime() - start;
+
+    BgpTopology finalBgpTopology;
+    if (finalCfgs == null) {
+      finalBgpTopology = simulator.getBgpTopology();
+      finalTime = 0;
+    } else {
+      // simulate the final control plane
+      start = System.nanoTime();
+      NetworkSnapshot finalSnapshot =
+          new NetworkSnapshot(new NetworkId(name), new SnapshotId("final"));
+      try {
+        triple
+            .getMiddle()
+            .storeConfigurations(
+                finalConfigs,
+                new ConvertConfigurationAnswerElement(),
+                null,
+                finalSnapshot.getNetwork(),
+                finalSnapshot.getSnapshot());
+      } catch (IOException e) {
+        LOGGER.error("Could not save final configurations for {}: {}", name, e.getMessage());
+      }
+      batfish.computeDataPlane(finalSnapshot);
+      finalBgpTopology = batfish.getTopologyProvider().getBgpTopology(finalSnapshot);
+      finalTime = System.nanoTime() - start;
+    }
+
+    buildSessionCache(initialConfigs, simulator.getBgpTopology(), initSessionCache);
+    buildSessionCache(finalConfigs, finalBgpTopology, finalSessionCache);
   }
 
   private static void buildSessionCache(
-      BgpTopology bgpTopology, Map<String, Map<String, BgpSession>> cache) {
+      Map<String, Configuration> configurations,
+      BgpTopology bgpTopology,
+      Map<String, Map<String, BgpSession>> cache) {
+    NetworkConfigurations nc = NetworkConfigurations.of(configurations);
     for (EndpointPair<BgpPeerConfigId> edge : bgpTopology.getGraph().edges()) {
       BgpPeerConfigId src = edge.source();
       BgpPeerConfigId tgt = edge.target();
-      BgpSession session =
-          new BgpSession(src, tgt, bgpTopology.getGraph().edgeValue(src, tgt).orElse(null));
+      BgpSessionProperties properties = bgpTopology.getGraph().edgeValue(src, tgt).orElse(null);
+      BgpPeerConfig cfg = nc.getBgpPeerConfig(src);
+      BgpSession session = new BgpSession(src, tgt, properties, cfg);
       cache
           .computeIfAbsent(src.getHostname(), k -> new HashMap<>())
           .put(tgt.getHostname(), session);
@@ -107,8 +155,8 @@ public class TraceExecutor {
             // Forward Remove: take both directions out of the network (look up init cache)
             simulator.insertOrRemoveBgpSessionAndSimulate(
                 expected,
-                new BgpSession(fwd.id1, fwd.id2, null),
-                new BgpSession(rev.id1, rev.id2, null));
+                BgpSession.remove(fwd.localId(), fwd.remoteId()),
+                BgpSession.remove(rev.localId(), rev.remoteId()));
           } else {
             // Undo Remove: restore both directions (look up init cache)
             simulator.insertOrRemoveBgpSessionAndSimulate(expected, fwd, rev);
@@ -129,8 +177,8 @@ public class TraceExecutor {
             // Undo Insert: remove both directions (look up final cache)
             simulator.insertOrRemoveBgpSessionAndSimulate(
                 expected,
-                new BgpSession(fwd.id1, fwd.id2, null),
-                new BgpSession(rev.id1, rev.id2, null));
+                BgpSession.remove(fwd.localId(), fwd.remoteId()),
+                BgpSession.remove(rev.localId(), rev.remoteId()));
           }
         } else if (expr instanceof TraceAction.ConfigExpr.BgpRouteMap rp) {
           RoutingPolicy setLocalPref =
@@ -155,21 +203,17 @@ public class TraceExecutor {
           if (!isUndo) {
             // Forward Update: remove old both directions (init), add new both directions (final)
             simulator.insertOrRemoveBgpSessionAndSimulate(
-                expected,
-                new BgpSession(oldFwd.id1, oldFwd.id2, null),
-                new BgpSession(oldRev.id1, oldRev.id2, null));
-            simulator.insertOrRemoveBgpSessionAndSimulate(
-                expected,
-                new BgpSession(newFwd.id1, newFwd.id2, newFwd.properties),
-                new BgpSession(newRev.id1, newRev.id2, newRev.properties));
+                null,
+                BgpSession.remove(oldFwd.localId(), oldFwd.remoteId()),
+                BgpSession.remove(oldRev.localId(), oldRev.remoteId()));
+            simulator.insertOrRemoveBgpSessionAndSimulate(expected, newFwd, newRev);
           } else {
             // Undo Update: remove new both directions (final), restore old both directions (init)
             simulator.insertOrRemoveBgpSessionAndSimulate(
-                expected,
-                new BgpSession(newFwd.id1, newFwd.id2, null),
-                new BgpSession(newRev.id1, newRev.id2, null),
-                new BgpSession(oldFwd.id1, oldFwd.id2, oldFwd.properties),
-                new BgpSession(oldRev.id1, oldRev.id2, oldRev.properties));
+                null,
+                BgpSession.remove(newFwd.localId(), newFwd.remoteId()),
+                BgpSession.remove(newRev.localId(), newRev.remoteId()));
+            simulator.insertOrRemoveBgpSessionAndSimulate(expected, oldFwd, oldRev);
           }
         } else if (update.from instanceof TraceAction.ConfigExpr.IgpLinkWeight from) {
           TraceAction.ConfigExpr.IgpLinkWeight to =
@@ -217,11 +261,19 @@ public class TraceExecutor {
   }
 
   private String toHostname(int id) {
-    String internal = "r" + id;
-    if (hostnames.contains(internal)) return internal;
-    String external = "er" + id;
-    if (hostnames.contains(external)) return external;
+    String ir = "r" + id;
+    if (initialConfigs.containsKey(ir) || finalConfigs.containsKey(ir)) return ir;
+    String er = "er" + id;
+    if (initialConfigs.containsKey(er) || finalConfigs.containsKey(er)) return er;
     throw new IllegalArgumentException("No router found for id " + id);
+  }
+
+  public long getInitialTime() {
+    return initialTime;
+  }
+
+  public long getFinalTime() {
+    return finalTime;
   }
 
   public long getCheckingTime() {

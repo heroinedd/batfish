@@ -81,7 +81,7 @@ public class IncrementalSimulator {
   }
 
   /** Incremental simulation after inserting or removing a BGP session. */
-  public void insertOrRemoveBgpSessionAndSimulate(boolean expected, BgpSession... sessions) {
+  public void insertOrRemoveBgpSessionAndSimulate(Boolean expected, BgpSession... sessions) {
     SortedMap<String, Node> nodes = new TreeMap<>(currDataPlaneResult.getNodes());
     List<VirtualRouter> vrs =
         toListInRandomOrder(nodes.values().stream().flatMap(n -> n.getVirtualRouters().stream()));
@@ -95,9 +95,22 @@ public class IncrementalSimulator {
         originalGraph.edges().stream()
             .collect(Collectors.toMap(edge -> edge, edge -> originalGraph.edgeValue(edge).get()));
     for (BgpSession session : sessions) {
-      EndpointPair<BgpPeerConfigId> e = EndpointPair.ordered(session.id1, session.id2);
-      if (session.properties == null) edges.remove(e);
-      else edges.put(e, session.properties);
+      EndpointPair<BgpPeerConfigId> e = EndpointPair.ordered(session.localId(), session.remoteId());
+      if (session.properties() == null) {
+        edges.remove(e);
+      } else {
+        edges.put(e, session.properties());
+        nodes
+            .get(session.localId().getHostname())
+            .getConfiguration()
+            .getVrfs()
+            .get(session.localId().getVrfName())
+            .getBgpProcess()
+            .getActiveNeighbors()
+            .put(
+                session.localId().getRemotePeerPrefix().getStartIp(),
+                (BgpActivePeerConfig) session.config());
+      }
     }
     // step1.2: build new graph
     MutableValueGraph<BgpPeerConfigId, BgpSessionProperties> newGraph =
@@ -122,7 +135,7 @@ public class IncrementalSimulator {
 
   /** Incremental simulation after modifying the OSPF link weight. */
   public void modifyOspfLinkWeightAndSimulate(
-      boolean expected, Edge edge, Double oldWeight, Double newWeight) {
+      Boolean expected, Edge edge, Double oldWeight, Double newWeight) {
     SortedMap<String, Node> nodes = new TreeMap<>(currDataPlaneResult.getNodes());
     List<VirtualRouter> vrs =
         toListInRandomOrder(nodes.values().stream().flatMap(n -> n.getVirtualRouters().stream()));
@@ -190,7 +203,7 @@ public class IncrementalSimulator {
    * from / to {@code node2}.
    */
   public void modifyRoutingPolicyAndSimulate(
-      boolean expected, String r1, String r2, RoutingPolicy newPolicy, boolean incoming) {
+      Boolean expected, String r1, String r2, RoutingPolicy newPolicy, boolean incoming) {
     String receiver = incoming ? r1 : r2;
     String sender = incoming ? r2 : r1;
 
@@ -324,7 +337,7 @@ public class IncrementalSimulator {
             currDataPlaneResult.getIpOwners());
   }
 
-  public void checkSafety(boolean expected) {
+  public void checkSafety(Boolean expected) {
     long start = System.nanoTime();
     // check control plane reachability
     boolean cp =
@@ -348,7 +361,7 @@ public class IncrementalSimulator {
             : batfish.bddLoopDetection(currSnapshot);
     boolean dp = loopFlows.isEmpty();
 
-    if ((cp && dp) != expected) {
+    if (expected != null && (cp && dp) != expected) {
       System.err.printf(
           "unexpected property checking result, expected %s, got %s\n", expected, (cp & dp));
       if (cp != expected) {
