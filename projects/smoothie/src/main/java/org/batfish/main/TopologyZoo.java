@@ -102,7 +102,7 @@ public class TopologyZoo {
   }
 
   /** Synthesize iBGP configurations with two route reflectors. */
-  public static Map<String, Configuration> RRx2FinalConfig(String name) {
+  public static Map<String, Configuration> doubleRouteReflectorFinalConfig(String name) {
     SimpleWeightedGraph<GmlUtil.Node, GmlUtil.Edge> g = GmlUtil.readTopology(name, -1);
     Set<Integer> externals =
         g.vertexSet().stream()
@@ -131,7 +131,7 @@ public class TopologyZoo {
   }
 
   /** Synthesize NetAcq configurations. */
-  public static Map<String, Configuration> NetAcqConfig(
+  public static Map<String, Configuration> networkAcquisitionConfig(
       String name, List<List<Integer>> subnetworks, boolean beforeAcq) {
     SimpleWeightedGraph<GmlUtil.Node, GmlUtil.Edge> g = GmlUtil.readTopology(name, -1);
     Set<Integer> externals =
@@ -215,12 +215,12 @@ public class TopologyZoo {
         .filter(i -> i != rr1 && !externals.contains(i))
         .forEach(
             client ->
-                iBgpSession(configurations.get(client), configurations.get(rr1), INT_ASN, true));
+                iBgpSession(configurations.get(rr1), configurations.get(client), INT_ASN, true));
     sub2.stream()
         .filter(i -> i != rr2 && !externals.contains(i))
         .forEach(
             client ->
-                iBgpSession(configurations.get(client), configurations.get(rr2), INT_ASN, true));
+                iBgpSession(configurations.get(rr2), configurations.get(client), INT_ASN, true));
 
     // ebgp sessions
     for (GmlUtil.Edge edge : g.edgeSet()) {

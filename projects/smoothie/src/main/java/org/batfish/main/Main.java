@@ -59,6 +59,7 @@ public class Main {
     Batfish batfish = triple.getRight();
     IncrementalSimulator simulator = new IncrementalSimulator(batfish, triple.getMiddle());
     simulator.computeInitialDataPlane();
+    simulator.checkSafety(true);
 
     NetworkSnapshot finalSnapshot =
         new NetworkSnapshot(new NetworkId(name), new SnapshotId("final"));
@@ -122,7 +123,7 @@ public class Main {
 
     Map<String, Configuration> initialConfigs =
         TopologyZoo.init(name, false, subnetworks.get(0).get(0));
-    Map<String, Configuration> finalConfigs = TopologyZoo.RRx2FinalConfig(name);
+    Map<String, Configuration> finalConfigs = TopologyZoo.doubleRouteReflectorFinalConfig(name);
 
     TraceExecutor executor = getExecutor(name, initialConfigs, finalConfigs);
     executor.execute(steps);
@@ -140,8 +141,10 @@ public class Main {
     List<List<Integer>> subnetworks = parsed.getLeft();
     List<TraceParser.Step> steps = parsed.getRight();
 
-    Map<String, Configuration> initialConfigs = TopologyZoo.NetAcqConfig(name, subnetworks, true);
-    Map<String, Configuration> finalConfigs = TopologyZoo.NetAcqConfig(name, subnetworks, false);
+    Map<String, Configuration> initialConfigs =
+        TopologyZoo.networkAcquisitionConfig(name, subnetworks, true);
+    Map<String, Configuration> finalConfigs =
+        TopologyZoo.networkAcquisitionConfig(name, subnetworks, false);
 
     // NetAcq traces have no BGP session changes, so finalBgpTopology == initial
     TraceExecutor executor = getExecutor(name, initialConfigs, finalConfigs);

@@ -324,7 +324,7 @@ public class IncrementalSimulator {
             currDataPlaneResult.getIpOwners());
   }
 
-  private void checkSafety(boolean expected) {
+  public void checkSafety(boolean expected) {
     long start = System.nanoTime();
     // check control plane reachability
     boolean cp =
