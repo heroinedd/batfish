@@ -27,12 +27,14 @@ public class Main {
   /**
    * Parses a trace file named {@code <name>-<suffix>.json} and logs the result.
    *
-   * @return a pair of (reflector IDs, steps)
+   * @return a pair of (subnetworks, steps); each subnetwork is a list of node IDs with the first
+   *     one being the reflector
    */
-  private static Pair<List<Integer>, List<TraceParser.Step>> loadTrace(String name, String suffix) {
+  private static Pair<List<List<Integer>>, List<TraceParser.Step>> loadTrace(
+      String name, String suffix) {
     try {
       Path tracePath = TRACES_DIR.resolve(name + "-" + suffix + ".json");
-      Pair<List<Integer>, List<TraceParser.Step>> parsed = TraceParser.parse(tracePath);
+      Pair<List<List<Integer>>, List<TraceParser.Step>> parsed = TraceParser.parse(tracePath);
       LOGGER.info(
           "Loaded {} steps from {}, reflectors: {}",
           parsed.getRight().size(),
@@ -93,13 +95,14 @@ public class Main {
     long start = System.nanoTime();
     LOGGER.info("{}-FM2RR starts", name);
 
-    Pair<List<Integer>, List<TraceParser.Step>> parsed = loadTrace(name, "FM2RR");
+    Pair<List<List<Integer>>, List<TraceParser.Step>> parsed = loadTrace(name, "FM2RR");
     if (parsed == null) return;
-    List<Integer> reflectors = parsed.getLeft();
+    List<List<Integer>> subnetworks = parsed.getLeft();
     List<TraceParser.Step> steps = parsed.getRight();
 
     Map<String, Configuration> initialConfigs = TopologyZoo.init(name, true, null);
-    Map<String, Configuration> finalConfigs = TopologyZoo.init(name, false, reflectors.get(0));
+    Map<String, Configuration> finalConfigs =
+        TopologyZoo.init(name, false, subnetworks.get(0).get(0));
 
     TraceExecutor executor = getExecutor(name, initialConfigs, finalConfigs);
     executor.execute(steps);
@@ -112,13 +115,14 @@ public class Main {
     long start = System.nanoTime();
     LOGGER.info("{}-RRx2 starts", name);
 
-    Pair<List<Integer>, List<TraceParser.Step>> parsed = loadTrace(name, "RRx2");
+    Pair<List<List<Integer>>, List<TraceParser.Step>> parsed = loadTrace(name, "RRx2");
     if (parsed == null) return;
-    List<Integer> reflectors = parsed.getLeft();
+    List<List<Integer>> subnetworks = parsed.getLeft();
     List<TraceParser.Step> steps = parsed.getRight();
 
-    Map<String, Configuration> initialConfigs = TopologyZoo.init(name, false, reflectors.get(0));
-    Map<String, Configuration> finalConfigs = TopologyZoo.init(name, false, true);
+    Map<String, Configuration> initialConfigs =
+        TopologyZoo.init(name, false, subnetworks.get(0).get(0));
+    Map<String, Configuration> finalConfigs = TopologyZoo.RRx2FinalConfig(name);
 
     TraceExecutor executor = getExecutor(name, initialConfigs, finalConfigs);
     executor.execute(steps);
@@ -131,12 +135,13 @@ public class Main {
     long start = System.nanoTime();
     LOGGER.info("{}-NetAcq starts", name);
 
-    Pair<List<Integer>, List<TraceParser.Step>> parsed = loadTrace(name, "NetAcq");
+    Pair<List<List<Integer>>, List<TraceParser.Step>> parsed = loadTrace(name, "NetAcq");
     if (parsed == null) return;
+    List<List<Integer>> subnetworks = parsed.getLeft();
     List<TraceParser.Step> steps = parsed.getRight();
 
-    Map<String, Configuration> initialConfigs = TopologyZoo.init(name, true, false);
-    Map<String, Configuration> finalConfigs = TopologyZoo.init(name, false, false);
+    Map<String, Configuration> initialConfigs = TopologyZoo.NetAcqConfig(name, subnetworks, true);
+    Map<String, Configuration> finalConfigs = TopologyZoo.NetAcqConfig(name, subnetworks, false);
 
     // NetAcq traces have no BGP session changes, so finalBgpTopology == initial
     TraceExecutor executor = getExecutor(name, initialConfigs, finalConfigs);
@@ -146,41 +151,27 @@ public class Main {
     finishUp(name, "NetAcq", executor, duration);
   }
 
-  public static void igpx2(String name) {
+  public static void doubleIgpWeightOrLocalPref(String name, String suffix) {
+    if (!(suffix.equalsIgnoreCase("lpx2") || suffix.equalsIgnoreCase("igpx2"))) {
+      LOGGER.error("Unsupported scenario {}", suffix);
+      return;
+    }
     long start = System.nanoTime();
-    LOGGER.info("{}-IGPx2 starts", name);
+    LOGGER.info("{}-{} starts", name, suffix);
 
-    Pair<List<Integer>, List<TraceParser.Step>> parsed = loadTrace(name, "IGPx2");
+    Pair<List<List<Integer>>, List<TraceParser.Step>> parsed = loadTrace(name, suffix);
     if (parsed == null) return;
+    int rrId = parsed.getLeft().get(0).get(0);
     List<TraceParser.Step> steps = parsed.getRight();
 
-    Map<String, Configuration> configs = TopologyZoo.init(name, false, null);
+    Map<String, Configuration> configs = TopologyZoo.init(name, false, rrId);
 
-    // IGPx2 traces have no BGP session changes, so finalBgpTopology == initial
+    // IGPx2 and LPx2 traces have no BGP session changes, so finalBgpTopology == initial
     TraceExecutor executor = getExecutor(name, configs, null);
     executor.execute(steps);
 
     double duration = (System.nanoTime() - start - time) / 1e9;
-    finishUp(name, "IGPx2", executor, duration);
-  }
-
-  public static void lpx2(String name) {
-    long start = System.nanoTime();
-    LOGGER.info("{}-LPx2 starts", name);
-
-    Pair<List<Integer>, List<TraceParser.Step>> parsed = loadTrace(name, "LPx2");
-    if (parsed == null) return;
-    List<Integer> reflectors = parsed.getLeft();
-    List<TraceParser.Step> steps = parsed.getRight();
-
-    Map<String, Configuration> configs = TopologyZoo.init(name, false, reflectors.get(0));
-
-    // LPx2 traces only modify route maps (no BGP session changes), so finalBgpTopology == initial
-    TraceExecutor executor = getExecutor(name, configs, null);
-    executor.execute(steps);
-
-    double duration = (System.nanoTime() - start - time) / 1e9;
-    finishUp(name, "LPx2", executor, duration);
+    finishUp(name, suffix, executor, duration);
   }
 
   public static void main(String[] args) {
@@ -189,9 +180,9 @@ public class Main {
     switch (scenario.toLowerCase()) {
       case "fm2rr" -> fm2rr(name);
       case "rrx2" -> rrx2(name);
-      case "igpx2" -> igpx2(name);
-      case "lpx2" -> lpx2(name);
       case "netacq" -> netAcq(name);
+      case "igpx2" -> doubleIgpWeightOrLocalPref(name, "IGPx2");
+      case "lpx2" -> doubleIgpWeightOrLocalPref(name, "LPx2");
       default -> throw new IllegalArgumentException("Scenario " + scenario + " not recognized");
     }
   }

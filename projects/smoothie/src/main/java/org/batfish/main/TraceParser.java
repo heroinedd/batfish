@@ -36,16 +36,21 @@ public class TraceParser {
   }
 
   /**
-   * Parses the trace file at {@code path} and returns a pair of (reflector IDs, steps). {@code
-   * solution} events are skipped.
+   * Parses the trace file at {@code path} and returns a pair of (subnetworks, steps). Each
+   * subnetwork is a list of node IDs; the first node in each list is that subnetwork's reflector.
+   * {@code solution} events are skipped.
    */
-  public static Pair<List<Integer>, List<Step>> parse(Path path) throws IOException {
+  public static Pair<List<List<Integer>>, List<Step>> parse(Path path) throws IOException {
     ObjectMapper mapper = new ObjectMapper();
     JsonNode root = mapper.readTree(path.toFile());
 
-    List<Integer> reflectors = new ArrayList<>();
-    for (JsonNode id : root.get("reflector")) {
-      reflectors.add(id.asInt());
+    List<List<Integer>> subnetworks = new ArrayList<>();
+    for (JsonNode subnetwork : root.get("subnetworks")) {
+      List<Integer> nodes = new ArrayList<>();
+      for (JsonNode id : subnetwork) {
+        nodes.add(id.asInt());
+      }
+      subnetworks.add(nodes);
     }
 
     List<Step> steps = new ArrayList<>();
@@ -74,7 +79,7 @@ public class TraceParser {
           break; // skip "solution" and any unknown events
       }
     }
-    return Pair.of(reflectors, steps);
+    return Pair.of(subnetworks, steps);
   }
 
   private static TraceAction parseAction(JsonNode node) {

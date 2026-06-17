@@ -101,22 +101,23 @@ public class TopologyZoo {
         .collect(Collectors.toMap(Configuration::getHostname, c -> c));
   }
 
-  /**
-   * Synthesize iBGP configurations with two router reflectors. Only RRx2 and NetAcq will call this
-   * function.
-   */
-  public static Map<String, Configuration> init(String name, boolean isolate, boolean rrx2) {
+  /** Synthesize iBGP configurations with two route reflectors. */
+  public static Map<String, Configuration> RRx2FinalConfig(String name) {
     SimpleWeightedGraph<GmlUtil.Node, GmlUtil.Edge> g = GmlUtil.readTopology(name, -1);
+    Set<Integer> externals =
+        g.vertexSet().stream()
+            .filter(node -> !node.isInternal())
+            .map(GmlUtil.Node::getId)
+            .collect(Collectors.toSet());
 
-    int[] rr1 = {0}, rr2 = {0};
+    int rr1 = 0, rr2 = 0;
     List<Integer> sub1 = Collections.emptyList(), sub2 = Collections.emptyList();
     try {
-      Path path =
-          BatfishUtil.INPUT_BASE.resolve(name).resolve(rrx2 ? "metis.json" : "subnetworks.json");
+      Path path = BatfishUtil.INPUT_BASE.resolve(name).resolve("metis.json");
       ObjectMapper mapper = new ObjectMapper();
       JsonNode root = mapper.readTree(path.toFile());
-      rr1[0] = root.get("0").get(0).get("rr").asInt();
-      rr2[0] = root.get("0").get(1).get("rr").asInt();
+      rr1 = root.get("0").get(0).get("rr").asInt();
+      rr2 = root.get("0").get(1).get("rr").asInt();
       sub1 = root.get("0").get(0).get("nodes").valueStream().map(JsonNode::asInt).toList();
       sub2 = root.get("0").get(1).get("nodes").valueStream().map(JsonNode::asInt).toList();
     } catch (Exception e) {
@@ -124,37 +125,31 @@ public class TopologyZoo {
       System.exit(1);
     }
 
-    Map<Integer, Configuration> configurations = new TreeMap<>();
-    Set<Integer> externals = new HashSet<>();
+    Pair<Map<String, Configuration>, Map<GmlUtil.Edge, Pair<Interface, Interface>>> pair =
+        initSubnetworks(g, externals, rr1, rr2, sub1, sub2, false);
+    return pair.getLeft();
+  }
 
-    // routers
-    for (GmlUtil.Node node : g.vertexSet()) {
-      int id = node.getId();
-      Configuration c = router((node.isInternal() ? "r" : "er") + id, loopbackIp(id));
-      configurations.put(id, c);
-      if (!node.isInternal()) externals.add(id);
-    }
+  /** Synthesize NetAcq configurations. */
+  public static Map<String, Configuration> NetAcqConfig(
+      String name, List<List<Integer>> subnetworks, boolean beforeAcq) {
+    SimpleWeightedGraph<GmlUtil.Node, GmlUtil.Edge> g = GmlUtil.readTopology(name, -1);
+    Set<Integer> externals =
+        g.vertexSet().stream()
+            .filter(node -> !node.isInternal())
+            .map(GmlUtil.Node::getId)
+            .collect(Collectors.toSet());
 
-    // edges
-    Map<GmlUtil.Edge, Pair<Interface, Interface>> map = new HashMap<>();
-    for (GmlUtil.Edge edge : g.edgeSet()) {
-      GmlUtil.Node n1 = g.getEdgeSource(edge);
-      GmlUtil.Node n2 = g.getEdgeTarget(edge);
-      Configuration c1 = configurations.get(n1.getId());
-      Configuration c2 = configurations.get(n2.getId());
-      String subnet =
-          String.format(
-              "10.%d.%d", Math.min(n1.getId(), n2.getId()), Math.max(n1.getId(), n2.getId()));
-      map.put(edge, edge(c1, c2, CISCO_ETH + n2.getId(), CISCO_ETH + n1.getId(), subnet));
-    }
+    int rr1 = subnetworks.get(0).get(0), rr2 = subnetworks.get(1).get(0);
+    List<Integer> sub1 = subnetworks.get(0), sub2 = subnetworks.get(1);
 
-    // ospf bgp processes
-    configurations.values().forEach(ConfigUtil::ospfProcess);
+    Pair<Map<String, Configuration>, Map<GmlUtil.Edge, Pair<Interface, Interface>>> pair =
+        initSubnetworks(g, externals, rr1, rr2, sub1, sub2, beforeAcq);
 
     // interface ospf cost
     int lw = g.edgeSet().size() * 100;
-    if (!rrx2 && isolate) {
-      // NetAcq initial
+    Map<GmlUtil.Edge, Pair<Interface, Interface>> map = pair.getRight();
+    if (beforeAcq) {
       for (GmlUtil.Edge edge : g.edgeSet()) {
         GmlUtil.Node n1 = g.getEdgeSource(edge);
         GmlUtil.Node n2 = g.getEdgeTarget(edge);
@@ -171,6 +166,43 @@ public class TopologyZoo {
       }
     }
 
+    return pair.getLeft();
+  }
+
+  private static Pair<Map<String, Configuration>, Map<GmlUtil.Edge, Pair<Interface, Interface>>>
+      initSubnetworks(
+          SimpleWeightedGraph<GmlUtil.Node, GmlUtil.Edge> g,
+          Set<Integer> externals,
+          int rr1,
+          int rr2,
+          List<Integer> sub1,
+          List<Integer> sub2,
+          boolean isolated) {
+    Map<Integer, Configuration> configurations = new TreeMap<>();
+
+    // routers
+    for (GmlUtil.Node node : g.vertexSet()) {
+      int id = node.getId();
+      Configuration c = router((node.isInternal() ? "r" : "er") + id, loopbackIp(id));
+      configurations.put(id, c);
+    }
+
+    // edges
+    Map<GmlUtil.Edge, Pair<Interface, Interface>> map = new HashMap<>();
+    for (GmlUtil.Edge edge : g.edgeSet()) {
+      GmlUtil.Node n1 = g.getEdgeSource(edge);
+      GmlUtil.Node n2 = g.getEdgeTarget(edge);
+      Configuration c1 = configurations.get(n1.getId());
+      Configuration c2 = configurations.get(n2.getId());
+      String subnet =
+          String.format(
+              "10.%d.%d", Math.min(n1.getId(), n2.getId()), Math.max(n1.getId(), n2.getId()));
+      map.put(edge, edge(c1, c2, CISCO_ETH + n2.getId(), CISCO_ETH + n1.getId(), subnet));
+    }
+
+    // ospf processes
+    configurations.values().forEach(ConfigUtil::ospfProcess);
+
     // bgp processes
     Set<Prefix> prefixes = Set.of(Prefix.parse("70.0.0.0/24"));
     configurations.forEach(
@@ -178,18 +210,17 @@ public class TopologyZoo {
             bgpProcess(value, externals.contains(key) ? prefixes : Collections.emptySet()));
 
     // ibgp sessions
-    if (!isolate)
-      iBgpSession(configurations.get(rr1[0]), configurations.get(rr2[0]), INT_ASN, false);
+    if (!isolated) iBgpSession(configurations.get(rr1), configurations.get(rr2), INT_ASN, false);
     sub1.stream()
-        .filter(i -> i != rr1[0] && !externals.contains(i))
+        .filter(i -> i != rr1 && !externals.contains(i))
         .forEach(
             client ->
-                iBgpSession(configurations.get(client), configurations.get(rr1[0]), INT_ASN, true));
+                iBgpSession(configurations.get(client), configurations.get(rr1), INT_ASN, true));
     sub2.stream()
-        .filter(i -> i != rr2[0] && !externals.contains(i))
+        .filter(i -> i != rr2 && !externals.contains(i))
         .forEach(
             client ->
-                iBgpSession(configurations.get(client), configurations.get(rr2[0]), INT_ASN, true));
+                iBgpSession(configurations.get(client), configurations.get(rr2), INT_ASN, true));
 
     // ebgp sessions
     for (GmlUtil.Edge edge : g.edgeSet()) {
@@ -209,8 +240,10 @@ public class TopologyZoo {
     // static routes
     externals.forEach(er -> prefixes.forEach(p -> staticRoute(configurations.get(er), p)));
 
-    return configurations.values().stream()
-        .collect(Collectors.toMap(Configuration::getHostname, c -> c));
+    return Pair.of(
+        configurations.values().stream()
+            .collect(Collectors.toMap(Configuration::getHostname, c -> c)),
+        map);
   }
 
   static final class CiscoConfiguration {
