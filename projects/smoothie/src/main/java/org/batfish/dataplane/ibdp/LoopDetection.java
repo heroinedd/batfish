@@ -9,10 +9,14 @@ import org.batfish.bddreachability.BDDReachabilityAnalysisFactory;
 import org.batfish.bddreachability.IpsRoutedOutInterfacesFactory;
 import org.batfish.common.bdd.BDDPacket;
 import org.batfish.common.plugin.IBatfish;
+import org.batfish.common.plugin.TracerouteEngine;
 import org.batfish.common.topology.IpOwners;
 import org.batfish.datamodel.Configuration;
 import org.batfish.datamodel.DataPlane;
 import org.batfish.datamodel.Flow;
+import org.batfish.datamodel.Topology;
+import org.batfish.datamodel.flow.Trace;
+import org.batfish.dataplane.TracerouteEngineImpl;
 import org.batfish.referencelibrary.ReferenceBook;
 import org.batfish.role.NodeRoleDimension;
 import org.batfish.specifier.*;
@@ -20,9 +24,7 @@ import org.batfish.symbolic.IngressLocation;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import static org.batfish.specifier.LocationInfoUtils.computeLocationInfo;
 
@@ -126,5 +128,14 @@ public class LoopDetection {
     public Map<Location, LocationInfo> getLocationInfo() {
       return _locationInfo;
     }
+  }
+
+  public static SortedMap<Flow, List<Trace>> buildTraces(
+      DataPlane dataPlane,
+      Topology layer3Topology,
+      Map<String, Configuration> configs,
+      Set<Flow> flows) {
+    TracerouteEngine trEngine = new TracerouteEngineImpl(dataPlane, layer3Topology, configs);
+    return trEngine.computeTraces(flows, false);
   }
 }

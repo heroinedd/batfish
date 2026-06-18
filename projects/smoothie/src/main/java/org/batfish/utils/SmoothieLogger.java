@@ -7,5 +7,13 @@ import org.apache.logging.log4j.Logger;
 public final class SmoothieLogger {
   public static final Logger LOGGER = LogManager.getLogger("smoothie");
 
+  public static boolean isDebug() {
+    return LOGGER.isDebugEnabled();
+  }
+
+  public static boolean isInfo() {
+    return LOGGER.isInfoEnabled();
+  }
+
   private SmoothieLogger() {}
 }

@@ -1,5 +1,6 @@
 package org.batfish.dataplane.ibdp;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Table;
 import com.google.common.graph.EndpointPair;
@@ -9,11 +10,15 @@ import com.google.common.graph.ValueGraphBuilder;
 import org.batfish.common.BatfishException;
 import org.batfish.common.NetworkSnapshot;
 import org.batfish.common.plugin.DataPlanePlugin;
+import org.batfish.common.util.BatfishObjectMapper;
 import org.batfish.datamodel.*;
 import org.batfish.datamodel.answers.ConvertConfigurationAnswerElement;
 import org.batfish.datamodel.answers.IncrementalBdpAnswerElement;
 import org.batfish.datamodel.bgp.AddressFamily;
 import org.batfish.datamodel.bgp.BgpTopology;
+import org.batfish.datamodel.flow.Hop;
+import org.batfish.datamodel.flow.RoutingStep;
+import org.batfish.datamodel.flow.Trace;
 import org.batfish.datamodel.routing_policy.RoutingPolicy;
 import org.batfish.datamodel.routing_policy.statement.Statement;
 import org.batfish.dataplane.ibdp.schedule.IbdpSchedule;
@@ -25,6 +30,7 @@ import org.batfish.main.Batfish;
 import org.batfish.storage.StorageProvider;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static org.batfish.common.util.StreamUtil.toListInRandomOrder;
@@ -339,9 +345,13 @@ public class IncrementalSimulator {
 
   public void checkSafety(Boolean expected) {
     long start = System.nanoTime();
+
+    DataPlane dataPlane = currDataPlaneResult._dataPlane;
+    Map<String, Configuration> configs = getConfigs(currDataPlaneResult.getNodes());
+
     // check control plane reachability
     boolean cp =
-        currDataPlaneResult._dataPlane.getRibs().values().stream()
+        dataPlane.getRibs().values().stream()
             .allMatch(
                 rib ->
                     prefixSpaces.stream()
@@ -354,18 +364,14 @@ public class IncrementalSimulator {
     Set<Flow> loopFlows =
         OPTIMIZE
             ? detection.bddLoopDetection(
-                batfish,
-                currDataPlaneResult._dataPlane,
-                getConfigs(currDataPlaneResult.getNodes()),
-                currDataPlaneResult.getIpOwners())
+                batfish, dataPlane, configs, currDataPlaneResult.getIpOwners())
             : batfish.bddLoopDetection(currSnapshot);
     boolean dp = loopFlows.isEmpty();
 
     if (expected != null && (cp && dp) != expected) {
       LOGGER.error("unexpected property checking result, expected {}, got {}", expected, (cp & dp));
       if (cp != expected) {
-        for (Table.Cell<String, String, FinalMainRib> cell :
-            currDataPlaneResult._dataPlane.getRibs().cellSet()) {
+        for (Table.Cell<String, String, FinalMainRib> cell : dataPlane.getRibs().cellSet()) {
           for (PrefixSpace ps : prefixSpaces) {
             boolean flag =
                 cell.getValue().getRoutes().stream()
@@ -380,9 +386,20 @@ public class IncrementalSimulator {
           }
         }
       }
-      if (dp != expected) {
-        loopFlows.forEach(LOGGER::debug);
+      if (dp != expected && SmoothieLogger.isDebug()) {
+        SortedMap<Flow, List<Trace>> loopFlowTraces =
+            LoopDetection.buildTraces(
+                dataPlane, currDataPlaneResult._topologies.getLayer3Topology(), configs, loopFlows);
+        loopFlowTraces.forEach(
+            (flow, traces) ->
+                LOGGER.debug(
+                    "\nFlow:\n\t{}\nTraces:\n\t{}\n",
+                    flow,
+                    traces.stream()
+                        .map(IncrementalSimulator::printTrace)
+                        .collect(Collectors.joining("\n\t"))));
       }
+      System.exit(0);
     }
     checkingTime += System.nanoTime() - start;
   }
@@ -447,5 +464,34 @@ public class IncrementalSimulator {
 
   public long getIoTime() {
     return ioTime;
+  }
+
+  private static boolean SIMPLE_TRACE = true;
+
+  private static String printTrace(Trace trace) {
+    try {
+      if (!trace.getDisposition().equals(FlowDisposition.LOOP)) {
+        return "Ignoring non-loop trace " + trace.getDisposition();
+      }
+      if (SIMPLE_TRACE) {
+        Function<RoutingStep, String> routeString =
+            step -> step.getDetail().getRoutes().get(0).getNextHopIp().toString();
+        Function<Hop, String> hopString =
+            hop ->
+                String.format(
+                    "(%s, %s)",
+                    hop.getNode().getName(),
+                    hop.getSteps().stream()
+                        .filter(step -> step instanceof RoutingStep)
+                        .map(step -> routeString.apply(((RoutingStep) step)))
+                        .findFirst()
+                        .orElse(""));
+        return "[" + trace.getHops().stream().map(hopString).collect(Collectors.joining(",")) + "]";
+      } else {
+        return BatfishObjectMapper.writePrettyString(trace);
+      }
+    } catch (JsonProcessingException ignored) {
+      return "";
+    }
   }
 }
