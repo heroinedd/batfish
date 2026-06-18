@@ -13,7 +13,7 @@ import java.util.*;
 public class Main {
   private static final Logger LOGGER = SmoothieLogger.LOGGER;
 
-  private static final Path TRACES_DIR = SmoothieConfig.tracesDir();
+  public static boolean snowcap = true;
 
   /**
    * Parses a trace file named {@code <name>-<suffix>.json} and logs the result.
@@ -24,8 +24,16 @@ public class Main {
   private static Pair<List<List<Integer>>, List<TraceParser.Step>> loadTrace(
       String name, String suffix) {
     try {
-      Path tracePath = TRACES_DIR.resolve(name + "-" + suffix + ".json");
-      Pair<List<List<Integer>>, List<TraceParser.Step>> parsed = TraceParser.parse(tracePath);
+      Path tracePath;
+      TraceParser parser;
+      if (snowcap) {
+        tracePath = SmoothieConfig.snowcapTracesDir().resolve(name + "-" + suffix + ".json");
+        parser = new SnowcapTraceParser();
+      } else {
+        tracePath = SmoothieConfig.conpannaTracesDir().resolve(name + "-" + suffix + "-fd-plan.json");
+        parser = new ConPannaTraceParser();
+      }
+      Pair<List<List<Integer>>, List<TraceParser.Step>> parsed = parser.parse(tracePath);
       LOGGER.info(
           "Loaded {} steps from {}, reflectors: {}",
           parsed.getRight().size(),

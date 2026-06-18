@@ -71,8 +71,12 @@ public final class SmoothieConfig {
     return get("smoothie.output.base");
   }
 
-  public static Path tracesDir() {
-    return get("smoothie.traces.dir");
+  public static Path snowcapTracesDir() {
+    return get("snowcap.traces.dir");
+  }
+
+  public static Path conpannaTracesDir() {
+    return get("conpanna.traces.dir");
   }
 
   public static Path topologiesDir() {
