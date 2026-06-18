@@ -1,6 +1,5 @@
 package org.batfish.utils;
 
-import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
@@ -31,8 +30,7 @@ import java.util.Properties;
  * </pre>
  */
 public final class SmoothieConfig {
-
-  private static final Logger LOGGER = LogManager.getLogger(SmoothieConfig.class);
+  private static final Logger LOGGER = SmoothieLogger.LOGGER;
   private static final Properties PROPS = new Properties();
 
   static {

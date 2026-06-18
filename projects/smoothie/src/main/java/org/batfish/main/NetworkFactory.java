@@ -1,13 +1,13 @@
 package org.batfish.main;
 
 import org.apache.commons.lang3.tuple.Triple;
-import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.batfish.datamodel.Configuration;
 import org.batfish.storage.StorageProvider;
 import org.batfish.utils.BatfishUtil;
 import org.batfish.utils.ResultPrinter;
 import org.batfish.utils.SmoothieConfig;
+import org.batfish.utils.SmoothieLogger;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -18,7 +18,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class NetworkFactory {
-  private static final Logger LOGGER = LogManager.getLogger(NetworkFactory.class);
+  private static final Logger LOGGER = SmoothieLogger.LOGGER;
 
   public static Triple<Path, StorageProvider, Batfish> zooFromVI(String name, boolean fullMesh) {
     Map<String, Configuration> configurations = TopologyZoo.init(name, fullMesh, null);

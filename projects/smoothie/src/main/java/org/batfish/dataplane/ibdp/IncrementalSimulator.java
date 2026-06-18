@@ -17,8 +17,8 @@ import org.batfish.datamodel.bgp.BgpTopology;
 import org.batfish.datamodel.routing_policy.RoutingPolicy;
 import org.batfish.datamodel.routing_policy.statement.Statement;
 import org.batfish.dataplane.ibdp.schedule.IbdpSchedule;
-import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.batfish.utils.SmoothieLogger;
 import org.batfish.dataplane.rib.RibDelta;
 import org.batfish.identifiers.SnapshotId;
 import org.batfish.main.Batfish;
@@ -35,7 +35,7 @@ import static org.batfish.dataplane.ibdp.IncrementalBdpEngine.*;
  * sessions, and (2) change of OSPF link weight.
  */
 public class IncrementalSimulator {
-  private static final Logger LOGGER = LogManager.getLogger(IncrementalSimulator.class);
+  private static final Logger LOGGER = SmoothieLogger.LOGGER;
 
   public static boolean DEBUG_RIB_DIFF = false;
   public static boolean OPTIMIZE = true;
@@ -362,8 +362,7 @@ public class IncrementalSimulator {
     boolean dp = loopFlows.isEmpty();
 
     if (expected != null && (cp && dp) != expected) {
-      System.err.printf(
-          "unexpected property checking result, expected %s, got %s\n", expected, (cp & dp));
+      LOGGER.error("unexpected property checking result, expected {}, got {}", expected, (cp & dp));
       if (cp != expected) {
         for (Table.Cell<String, String, FinalMainRib> cell :
             currDataPlaneResult._dataPlane.getRibs().cellSet()) {
@@ -372,15 +371,17 @@ public class IncrementalSimulator {
                 cell.getValue().getRoutes().stream()
                     .anyMatch(route -> ps.containsPrefix(route.getNetwork()));
             if (!flag) {
-              System.err.printf(
-                  "Vrf(%s, %s) does not have route for %s\n",
-                  cell.getRowKey(), cell.getColumnKey(), ps);
+              LOGGER.debug(
+                  "Vrf({}, {}) does not have route for {}",
+                  cell.getRowKey(),
+                  cell.getColumnKey(),
+                  ps);
             }
           }
         }
       }
       if (dp != expected) {
-        loopFlows.forEach(System.out::println);
+        loopFlows.forEach(LOGGER::debug);
       }
     }
     checkingTime += System.nanoTime() - start;
@@ -424,7 +425,7 @@ public class IncrementalSimulator {
     int oldW = iface.getOspfSettings().getCost();
     int newW = oldWeight == null ? newWeight.intValue() : (int) (oldW * newWeight / oldWeight);
     iface.getOspfSettings().setCost(newW);
-    LOGGER.error("modify OSPF link weight from {} to {}", oldW, newW);
+    LOGGER.info("modify OSPF link weight from {} to {}", oldW, newW);
   }
 
   public Topology getLayer3Topology() {

@@ -3,7 +3,6 @@ package org.batfish.utils;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.apache.commons.lang3.ObjectUtils;
-import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jgrapht.graph.SimpleWeightedGraph;
 import org.jgrapht.nio.Attribute;
@@ -27,7 +26,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class GmlUtil {
-  private static final Logger LOGGER = LogManager.getLogger(GmlUtil.class);
+  private static final Logger LOGGER = SmoothieLogger.LOGGER;
   protected static final int MAX_WEIGHT = 100;
 
   public static final class Node {

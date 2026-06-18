@@ -1,17 +1,17 @@
 package org.batfish.main;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.batfish.datamodel.Configuration;
 import org.batfish.utils.SmoothieConfig;
+import org.batfish.utils.SmoothieLogger;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
 
 public class Main {
-  private static final Logger LOGGER = LogManager.getLogger(Main.class);
+  private static final Logger LOGGER = SmoothieLogger.LOGGER;
 
   private static final Path TRACES_DIR = SmoothieConfig.tracesDir();
 

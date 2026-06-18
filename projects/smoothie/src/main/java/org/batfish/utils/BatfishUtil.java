@@ -21,7 +21,6 @@ import javax.annotation.Nullable;
 import org.apache.commons.collections4.map.LRUMap;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.Triple;
-import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.batfish.common.BatfishLogger;
 import org.batfish.common.BfConsts;
@@ -38,7 +37,7 @@ import org.batfish.storage.StorageProvider;
 import org.batfish.vendor.VendorConfiguration;
 
 public class BatfishUtil {
-  private static final Logger LOGGER = LogManager.getLogger(BatfishUtil.class);
+  private static final Logger LOGGER = SmoothieLogger.LOGGER;
 
   public static final Path INPUT_BASE = SmoothieConfig.inputBase();
   public static final Path OUTPUT_BASE = SmoothieConfig.outputBase();

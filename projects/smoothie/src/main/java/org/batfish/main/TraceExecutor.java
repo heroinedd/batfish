@@ -3,7 +3,6 @@ package org.batfish.main;
 import com.google.common.graph.EndpointPair;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.Triple;
-import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.batfish.common.NetworkSnapshot;
 import org.batfish.datamodel.*;
@@ -19,6 +18,7 @@ import org.batfish.identifiers.NetworkId;
 import org.batfish.identifiers.SnapshotId;
 import org.batfish.storage.StorageProvider;
 import org.batfish.utils.BatfishUtil;
+import org.batfish.utils.SmoothieLogger;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -49,8 +49,7 @@ import java.util.*;
  * </pre>
  */
 public class TraceExecutor {
-
-  private static final Logger LOGGER = LogManager.getLogger(TraceExecutor.class);
+  private static final Logger LOGGER = SmoothieLogger.LOGGER;
 
   private final Path base;
   private final IncrementalSimulator simulator;
@@ -145,7 +144,7 @@ public class TraceExecutor {
 
   private void executeStep(List<TraceAction> actions, boolean isUndo, boolean expected) {
     for (TraceAction action : actions) {
-      LOGGER.error((isUndo ? "Undo " : "") + action.toString());
+      LOGGER.debug((isUndo ? "Undo " : "") + action.toString());
       if (action instanceof TraceAction.Remove) {
         TraceAction.ConfigExpr expr = ((TraceAction.Remove) action).expr;
         if (expr instanceof TraceAction.ConfigExpr.BgpSession bgp) {
