@@ -146,7 +146,7 @@ public class ConfigUtil {
     bgpRedistributionPolicy(c);
 
     // set tie-breaker to router-id for deterministic simulation result
-    // proc.setTieBreaker(BgpTieBreaker.ROUTER_ID);
+    proc.setTieBreaker(BgpTieBreaker.ROUTER_ID);
 
     return proc;
   }
