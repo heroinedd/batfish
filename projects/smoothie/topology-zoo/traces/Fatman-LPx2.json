@@ -1,0 +1,140 @@
+{
+  "subnetworks": [
+    [
+      11,
+      0,
+      1,
+      2,
+      3,
+      5,
+      7,
+      8,
+      9,
+      10,
+      12,
+      13,
+      14,
+      15,
+      16
+    ]
+  ],
+  "trace": [
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_route_map",
+            "router": 9,
+            "direction": "incoming",
+            "order": 2,
+            "map": {
+              "order": 2,
+              "state": "allow",
+              "conds": [
+                {
+                  "type": "neighbor",
+                  "router": 4
+                }
+              ],
+              "set": [
+                {
+                  "type": "local_pref",
+                  "value": 200
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_route_map",
+            "router": 10,
+            "direction": "incoming",
+            "order": 1,
+            "map": {
+              "order": 1,
+              "state": "allow",
+              "conds": [
+                {
+                  "type": "neighbor",
+                  "router": 6
+                }
+              ],
+              "set": [
+                {
+                  "type": "local_pref",
+                  "value": 200
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "solution",
+      "ordering": [
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_route_map",
+            "router": 9,
+            "direction": "incoming",
+            "order": 2,
+            "map": {
+              "order": 2,
+              "state": "allow",
+              "conds": [
+                {
+                  "type": "neighbor",
+                  "router": 4
+                }
+              ],
+              "set": [
+                {
+                  "type": "local_pref",
+                  "value": 200
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_route_map",
+            "router": 10,
+            "direction": "incoming",
+            "order": 1,
+            "map": {
+              "order": 1,
+              "state": "allow",
+              "conds": [
+                {
+                  "type": "neighbor",
+                  "router": 6
+                }
+              ],
+              "set": [
+                {
+                  "type": "local_pref",
+                  "value": 200
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

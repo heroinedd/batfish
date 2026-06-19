@@ -1,0 +1,439 @@
+{
+  "subnetworks": [
+    [
+      4,
+      0,
+      5,
+      6,
+      7,
+      8
+    ]
+  ],
+  "trace": [
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "remove",
+          "expr": {
+            "type": "bgp_session",
+            "source": 5,
+            "target": 6,
+            "session_type": "ibgp_peer"
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "update",
+          "from": {
+            "type": "bgp_session",
+            "source": 4,
+            "target": 5,
+            "session_type": "ibgp_peer"
+          },
+          "to": {
+            "type": "bgp_session",
+            "source": 4,
+            "target": 5,
+            "session_type": "ibgp_client"
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "remove",
+          "expr": {
+            "type": "bgp_session",
+            "source": 5,
+            "target": 0,
+            "session_type": "ibgp_peer"
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "update",
+          "from": {
+            "type": "bgp_session",
+            "source": 4,
+            "target": 8,
+            "session_type": "ibgp_peer"
+          },
+          "to": {
+            "type": "bgp_session",
+            "source": 4,
+            "target": 8,
+            "session_type": "ibgp_client"
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "remove",
+          "expr": {
+            "type": "bgp_session",
+            "source": 0,
+            "target": 7,
+            "session_type": "ibgp_peer"
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "remove",
+          "expr": {
+            "type": "bgp_session",
+            "source": 6,
+            "target": 8,
+            "session_type": "ibgp_peer"
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "remove",
+          "expr": {
+            "type": "bgp_session",
+            "source": 7,
+            "target": 8,
+            "session_type": "ibgp_peer"
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "remove",
+          "expr": {
+            "type": "bgp_session",
+            "source": 0,
+            "target": 8,
+            "session_type": "ibgp_peer"
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "remove",
+          "expr": {
+            "type": "bgp_session",
+            "source": 0,
+            "target": 6,
+            "session_type": "ibgp_peer"
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "update",
+          "from": {
+            "type": "bgp_session",
+            "source": 4,
+            "target": 7,
+            "session_type": "ibgp_peer"
+          },
+          "to": {
+            "type": "bgp_session",
+            "source": 4,
+            "target": 7,
+            "session_type": "ibgp_client"
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "update",
+          "from": {
+            "type": "bgp_session",
+            "source": 4,
+            "target": 0,
+            "session_type": "ibgp_peer"
+          },
+          "to": {
+            "type": "bgp_session",
+            "source": 4,
+            "target": 0,
+            "session_type": "ibgp_client"
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "remove",
+          "expr": {
+            "type": "bgp_session",
+            "source": 5,
+            "target": 7,
+            "session_type": "ibgp_peer"
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "update",
+          "from": {
+            "type": "bgp_session",
+            "source": 4,
+            "target": 6,
+            "session_type": "ibgp_peer"
+          },
+          "to": {
+            "type": "bgp_session",
+            "source": 4,
+            "target": 6,
+            "session_type": "ibgp_client"
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "remove",
+          "expr": {
+            "type": "bgp_session",
+            "source": 5,
+            "target": 8,
+            "session_type": "ibgp_peer"
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "remove",
+          "expr": {
+            "type": "bgp_session",
+            "source": 6,
+            "target": 7,
+            "session_type": "ibgp_peer"
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "solution",
+      "ordering": [
+        {
+          "type": "remove",
+          "expr": {
+            "type": "bgp_session",
+            "source": 5,
+            "target": 6,
+            "session_type": "ibgp_peer"
+          }
+        },
+        {
+          "type": "update",
+          "from": {
+            "type": "bgp_session",
+            "source": 4,
+            "target": 5,
+            "session_type": "ibgp_peer"
+          },
+          "to": {
+            "type": "bgp_session",
+            "source": 4,
+            "target": 5,
+            "session_type": "ibgp_client"
+          }
+        },
+        {
+          "type": "remove",
+          "expr": {
+            "type": "bgp_session",
+            "source": 5,
+            "target": 0,
+            "session_type": "ibgp_peer"
+          }
+        },
+        {
+          "type": "update",
+          "from": {
+            "type": "bgp_session",
+            "source": 4,
+            "target": 8,
+            "session_type": "ibgp_peer"
+          },
+          "to": {
+            "type": "bgp_session",
+            "source": 4,
+            "target": 8,
+            "session_type": "ibgp_client"
+          }
+        },
+        {
+          "type": "remove",
+          "expr": {
+            "type": "bgp_session",
+            "source": 0,
+            "target": 7,
+            "session_type": "ibgp_peer"
+          }
+        },
+        {
+          "type": "remove",
+          "expr": {
+            "type": "bgp_session",
+            "source": 6,
+            "target": 8,
+            "session_type": "ibgp_peer"
+          }
+        },
+        {
+          "type": "remove",
+          "expr": {
+            "type": "bgp_session",
+            "source": 7,
+            "target": 8,
+            "session_type": "ibgp_peer"
+          }
+        },
+        {
+          "type": "remove",
+          "expr": {
+            "type": "bgp_session",
+            "source": 0,
+            "target": 8,
+            "session_type": "ibgp_peer"
+          }
+        },
+        {
+          "type": "remove",
+          "expr": {
+            "type": "bgp_session",
+            "source": 0,
+            "target": 6,
+            "session_type": "ibgp_peer"
+          }
+        },
+        {
+          "type": "update",
+          "from": {
+            "type": "bgp_session",
+            "source": 4,
+            "target": 7,
+            "session_type": "ibgp_peer"
+          },
+          "to": {
+            "type": "bgp_session",
+            "source": 4,
+            "target": 7,
+            "session_type": "ibgp_client"
+          }
+        },
+        {
+          "type": "update",
+          "from": {
+            "type": "bgp_session",
+            "source": 4,
+            "target": 0,
+            "session_type": "ibgp_peer"
+          },
+          "to": {
+            "type": "bgp_session",
+            "source": 4,
+            "target": 0,
+            "session_type": "ibgp_client"
+          }
+        },
+        {
+          "type": "remove",
+          "expr": {
+            "type": "bgp_session",
+            "source": 5,
+            "target": 7,
+            "session_type": "ibgp_peer"
+          }
+        },
+        {
+          "type": "update",
+          "from": {
+            "type": "bgp_session",
+            "source": 4,
+            "target": 6,
+            "session_type": "ibgp_peer"
+          },
+          "to": {
+            "type": "bgp_session",
+            "source": 4,
+            "target": 6,
+            "session_type": "ibgp_client"
+          }
+        },
+        {
+          "type": "remove",
+          "expr": {
+            "type": "bgp_session",
+            "source": 5,
+            "target": 8,
+            "session_type": "ibgp_peer"
+          }
+        },
+        {
+          "type": "remove",
+          "expr": {
+            "type": "bgp_session",
+            "source": 6,
+            "target": 7,
+            "session_type": "ibgp_peer"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -46,7 +46,7 @@ public class NetworkFactory {
 
   public static Triple<Path, StorageProvider, Batfish> example() {
     Map<String, String> configurations = new TreeMap<>();
-    Path folder = SmoothieConfig.networksExample();
+    Path folder = SmoothieConfig.NETWORKS_EXAMPLE;
     for (String name : Objects.requireNonNull(folder.toFile().list())) {
       try (BufferedReader br = new BufferedReader(new FileReader(folder.resolve(name).toFile()))) {
         configurations.put(name.split("\\.")[0], br.lines().collect(Collectors.joining("\n")));
@@ -78,7 +78,7 @@ public class NetworkFactory {
     // boolean fullMesh = args.length > 1 && args[1].equalsIgnoreCase("true");
     // simulate(zooFromVI(name, fullMesh));
 
-    String internet2 = SmoothieConfig.networksInternet2().toString();
+    String internet2 = SmoothieConfig.NETWORKS_INTERNET2.toString();
     String deltacom = SmoothieConfig.networksCornetto().toString();
     simulate(from(deltacom, "deltacom"));
   }

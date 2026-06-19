@@ -9,6 +9,7 @@ import org.batfish.datamodel.Prefix;
 import org.batfish.utils.BatfishUtil;
 import org.batfish.utils.ConfigUtil;
 import org.batfish.utils.GmlUtil;
+import org.batfish.utils.SmoothieConfig;
 import org.jgrapht.graph.SimpleWeightedGraph;
 
 import javax.annotation.Nullable;
@@ -113,7 +114,7 @@ public class TopologyZoo {
     int rr1 = 0, rr2 = 0;
     List<Integer> sub1 = Collections.emptyList(), sub2 = Collections.emptyList();
     try {
-      Path path = BatfishUtil.INPUT_BASE.resolve(name).resolve("metis.json");
+      Path path = SmoothieConfig.METIS_DIR.resolve(name + ".json");
       ObjectMapper mapper = new ObjectMapper();
       JsonNode root = mapper.readTree(path.toFile());
       rr1 = root.get("0").get(0).get("rr").asInt();

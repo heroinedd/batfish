@@ -21,7 +21,7 @@ Configuration:
         level: "OFF"
         additivity: false
       - name: smoothie
-        level: info
+        level: "OFF"
         additivity: false
         AppenderRef:
           ref: STDOUT

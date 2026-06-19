@@ -1,0 +1,555 @@
+{
+  "subnetworks": [
+    [
+      14,
+      0,
+      1,
+      2,
+      3,
+      6,
+      9,
+      10,
+      11,
+      12,
+      13,
+      15,
+      16,
+      17,
+      18
+    ]
+  ],
+  "trace": [
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "remove",
+          "expr": {
+            "type": "bgp_session",
+            "source": 14,
+            "target": 11,
+            "session_type": "ibgp_client"
+          }
+        }
+      ],
+      "success": false
+    },
+    {
+      "event": "undo",
+      "undone": [
+        {
+          "type": "remove",
+          "expr": {
+            "type": "bgp_session",
+            "source": 14,
+            "target": 11,
+            "session_type": "ibgp_client"
+          }
+        }
+      ]
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "remove",
+          "expr": {
+            "type": "bgp_session",
+            "source": 14,
+            "target": 0,
+            "session_type": "ibgp_client"
+          }
+        }
+      ],
+      "success": false
+    },
+    {
+      "event": "undo",
+      "undone": [
+        {
+          "type": "remove",
+          "expr": {
+            "type": "bgp_session",
+            "source": 14,
+            "target": 0,
+            "session_type": "ibgp_client"
+          }
+        }
+      ]
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_session",
+            "source": 10,
+            "target": 3,
+            "session_type": "ibgp_client"
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "remove",
+          "expr": {
+            "type": "bgp_session",
+            "source": 14,
+            "target": 11,
+            "session_type": "ibgp_client"
+          }
+        }
+      ],
+      "success": false
+    },
+    {
+      "event": "undo",
+      "undone": [
+        {
+          "type": "remove",
+          "expr": {
+            "type": "bgp_session",
+            "source": 14,
+            "target": 11,
+            "session_type": "ibgp_client"
+          }
+        }
+      ]
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "remove",
+          "expr": {
+            "type": "bgp_session",
+            "source": 14,
+            "target": 0,
+            "session_type": "ibgp_client"
+          }
+        }
+      ],
+      "success": false
+    },
+    {
+      "event": "undo",
+      "undone": [
+        {
+          "type": "remove",
+          "expr": {
+            "type": "bgp_session",
+            "source": 14,
+            "target": 0,
+            "session_type": "ibgp_client"
+          }
+        }
+      ]
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_session",
+            "source": 10,
+            "target": 11,
+            "session_type": "ibgp_client"
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "remove",
+          "expr": {
+            "type": "bgp_session",
+            "source": 14,
+            "target": 6,
+            "session_type": "ibgp_client"
+          }
+        }
+      ],
+      "success": false
+    },
+    {
+      "event": "undo",
+      "undone": [
+        {
+          "type": "remove",
+          "expr": {
+            "type": "bgp_session",
+            "source": 14,
+            "target": 6,
+            "session_type": "ibgp_client"
+          }
+        }
+      ]
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_session",
+            "source": 10,
+            "target": 2,
+            "session_type": "ibgp_client"
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_session",
+            "source": 10,
+            "target": 6,
+            "session_type": "ibgp_client"
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "remove",
+          "expr": {
+            "type": "bgp_session",
+            "source": 14,
+            "target": 0,
+            "session_type": "ibgp_client"
+          }
+        }
+      ],
+      "success": false
+    },
+    {
+      "event": "undo",
+      "undone": [
+        {
+          "type": "remove",
+          "expr": {
+            "type": "bgp_session",
+            "source": 14,
+            "target": 0,
+            "session_type": "ibgp_client"
+          }
+        }
+      ]
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_session",
+            "source": 10,
+            "target": 1,
+            "session_type": "ibgp_client"
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "remove",
+          "expr": {
+            "type": "bgp_session",
+            "source": 14,
+            "target": 0,
+            "session_type": "ibgp_client"
+          }
+        }
+      ],
+      "success": false
+    },
+    {
+      "event": "undo",
+      "undone": [
+        {
+          "type": "remove",
+          "expr": {
+            "type": "bgp_session",
+            "source": 14,
+            "target": 0,
+            "session_type": "ibgp_client"
+          }
+        }
+      ]
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_session",
+            "source": 10,
+            "target": 0,
+            "session_type": "ibgp_client"
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "remove",
+          "expr": {
+            "type": "bgp_session",
+            "source": 14,
+            "target": 0,
+            "session_type": "ibgp_client"
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "remove",
+          "expr": {
+            "type": "bgp_session",
+            "source": 14,
+            "target": 3,
+            "session_type": "ibgp_client"
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "remove",
+          "expr": {
+            "type": "bgp_session",
+            "source": 14,
+            "target": 1,
+            "session_type": "ibgp_client"
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "remove",
+          "expr": {
+            "type": "bgp_session",
+            "source": 14,
+            "target": 6,
+            "session_type": "ibgp_client"
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "update",
+          "from": {
+            "type": "bgp_session",
+            "source": 14,
+            "target": 10,
+            "session_type": "ibgp_client"
+          },
+          "to": {
+            "type": "bgp_session",
+            "source": 14,
+            "target": 10,
+            "session_type": "ibgp_peer"
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "remove",
+          "expr": {
+            "type": "bgp_session",
+            "source": 14,
+            "target": 11,
+            "session_type": "ibgp_client"
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "remove",
+          "expr": {
+            "type": "bgp_session",
+            "source": 14,
+            "target": 2,
+            "session_type": "ibgp_client"
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "solution",
+      "ordering": [
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_session",
+            "source": 10,
+            "target": 3,
+            "session_type": "ibgp_client"
+          }
+        },
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_session",
+            "source": 10,
+            "target": 11,
+            "session_type": "ibgp_client"
+          }
+        },
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_session",
+            "source": 10,
+            "target": 2,
+            "session_type": "ibgp_client"
+          }
+        },
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_session",
+            "source": 10,
+            "target": 6,
+            "session_type": "ibgp_client"
+          }
+        },
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_session",
+            "source": 10,
+            "target": 1,
+            "session_type": "ibgp_client"
+          }
+        },
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_session",
+            "source": 10,
+            "target": 0,
+            "session_type": "ibgp_client"
+          }
+        },
+        {
+          "type": "remove",
+          "expr": {
+            "type": "bgp_session",
+            "source": 14,
+            "target": 0,
+            "session_type": "ibgp_client"
+          }
+        },
+        {
+          "type": "remove",
+          "expr": {
+            "type": "bgp_session",
+            "source": 14,
+            "target": 3,
+            "session_type": "ibgp_client"
+          }
+        },
+        {
+          "type": "remove",
+          "expr": {
+            "type": "bgp_session",
+            "source": 14,
+            "target": 1,
+            "session_type": "ibgp_client"
+          }
+        },
+        {
+          "type": "remove",
+          "expr": {
+            "type": "bgp_session",
+            "source": 14,
+            "target": 6,
+            "session_type": "ibgp_client"
+          }
+        },
+        {
+          "type": "update",
+          "from": {
+            "type": "bgp_session",
+            "source": 14,
+            "target": 10,
+            "session_type": "ibgp_client"
+          },
+          "to": {
+            "type": "bgp_session",
+            "source": 14,
+            "target": 10,
+            "session_type": "ibgp_peer"
+          }
+        },
+        {
+          "type": "remove",
+          "expr": {
+            "type": "bgp_session",
+            "source": 14,
+            "target": 11,
+            "session_type": "ibgp_client"
+          }
+        },
+        {
+          "type": "remove",
+          "expr": {
+            "type": "bgp_session",
+            "source": 14,
+            "target": 2,
+            "session_type": "ibgp_client"
+          }
+        }
+      ]
+    }
+  ]
+}

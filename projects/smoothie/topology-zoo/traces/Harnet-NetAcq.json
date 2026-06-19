@@ -1,0 +1,264 @@
+{
+  "subnetworks": [
+    [
+      15,
+      2,
+      16,
+      17,
+      18,
+      19,
+      20
+    ],
+    [
+      14,
+      13
+    ]
+  ],
+  "trace": [
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 14,
+            "target": 16,
+            "weight": null
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 14,
+            "target": 16,
+            "weight": 91.0
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 14,
+            "target": 13,
+            "weight": 2.0
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 14,
+            "target": 13,
+            "weight": 1.0
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 16,
+            "target": 14,
+            "weight": null
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 16,
+            "target": 14,
+            "weight": 91.0
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 15,
+            "target": 13,
+            "weight": null
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 15,
+            "target": 13,
+            "weight": 72.0
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_session",
+            "source": 15,
+            "target": 14,
+            "session_type": "ibgp_peer"
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 13,
+            "target": 14,
+            "weight": 2.0
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 13,
+            "target": 14,
+            "weight": 1.0
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 13,
+            "target": 15,
+            "weight": null
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 13,
+            "target": 15,
+            "weight": 72.0
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "solution",
+      "ordering": [
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 14,
+            "target": 16,
+            "weight": null
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 14,
+            "target": 16,
+            "weight": 91.0
+          }
+        },
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 14,
+            "target": 13,
+            "weight": 2.0
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 14,
+            "target": 13,
+            "weight": 1.0
+          }
+        },
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 16,
+            "target": 14,
+            "weight": null
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 16,
+            "target": 14,
+            "weight": 91.0
+          }
+        },
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 15,
+            "target": 13,
+            "weight": null
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 15,
+            "target": 13,
+            "weight": 72.0
+          }
+        },
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_session",
+            "source": 15,
+            "target": 14,
+            "session_type": "ibgp_peer"
+          }
+        },
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 13,
+            "target": 14,
+            "weight": 2.0
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 13,
+            "target": 14,
+            "weight": 1.0
+          }
+        },
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 13,
+            "target": 15,
+            "weight": null
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 13,
+            "target": 15,
+            "weight": 72.0
+          }
+        }
+      ]
+    }
+  ]
+}

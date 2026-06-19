@@ -1,0 +1,197 @@
+{
+  "subnetworks": [
+    [
+      11,
+      2,
+      3,
+      10
+    ]
+  ],
+  "trace": [
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "update",
+          "from": {
+            "type": "bgp_session",
+            "source": 3,
+            "target": 11,
+            "session_type": "ibgp_peer"
+          },
+          "to": {
+            "type": "bgp_session",
+            "source": 11,
+            "target": 3,
+            "session_type": "ibgp_client"
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "update",
+          "from": {
+            "type": "bgp_session",
+            "source": 2,
+            "target": 11,
+            "session_type": "ibgp_peer"
+          },
+          "to": {
+            "type": "bgp_session",
+            "source": 11,
+            "target": 2,
+            "session_type": "ibgp_client"
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "remove",
+          "expr": {
+            "type": "bgp_session",
+            "source": 10,
+            "target": 3,
+            "session_type": "ibgp_peer"
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "remove",
+          "expr": {
+            "type": "bgp_session",
+            "source": 2,
+            "target": 10,
+            "session_type": "ibgp_peer"
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "update",
+          "from": {
+            "type": "bgp_session",
+            "source": 10,
+            "target": 11,
+            "session_type": "ibgp_peer"
+          },
+          "to": {
+            "type": "bgp_session",
+            "source": 11,
+            "target": 10,
+            "session_type": "ibgp_client"
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "remove",
+          "expr": {
+            "type": "bgp_session",
+            "source": 2,
+            "target": 3,
+            "session_type": "ibgp_peer"
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "solution",
+      "ordering": [
+        {
+          "type": "update",
+          "from": {
+            "type": "bgp_session",
+            "source": 3,
+            "target": 11,
+            "session_type": "ibgp_peer"
+          },
+          "to": {
+            "type": "bgp_session",
+            "source": 11,
+            "target": 3,
+            "session_type": "ibgp_client"
+          }
+        },
+        {
+          "type": "update",
+          "from": {
+            "type": "bgp_session",
+            "source": 2,
+            "target": 11,
+            "session_type": "ibgp_peer"
+          },
+          "to": {
+            "type": "bgp_session",
+            "source": 11,
+            "target": 2,
+            "session_type": "ibgp_client"
+          }
+        },
+        {
+          "type": "remove",
+          "expr": {
+            "type": "bgp_session",
+            "source": 10,
+            "target": 3,
+            "session_type": "ibgp_peer"
+          }
+        },
+        {
+          "type": "remove",
+          "expr": {
+            "type": "bgp_session",
+            "source": 2,
+            "target": 10,
+            "session_type": "ibgp_peer"
+          }
+        },
+        {
+          "type": "update",
+          "from": {
+            "type": "bgp_session",
+            "source": 10,
+            "target": 11,
+            "session_type": "ibgp_peer"
+          },
+          "to": {
+            "type": "bgp_session",
+            "source": 11,
+            "target": 10,
+            "session_type": "ibgp_client"
+          }
+        },
+        {
+          "type": "remove",
+          "expr": {
+            "type": "bgp_session",
+            "source": 2,
+            "target": 3,
+            "session_type": "ibgp_peer"
+          }
+        }
+      ]
+    }
+  ]
+}

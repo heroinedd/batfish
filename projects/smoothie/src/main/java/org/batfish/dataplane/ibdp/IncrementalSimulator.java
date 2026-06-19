@@ -399,7 +399,7 @@ public class IncrementalSimulator {
                         .map(IncrementalSimulator::printTrace)
                         .collect(Collectors.joining("\n\t"))));
       }
-      System.exit(0);
+      if (SmoothieLogger.isDebug()) System.exit(0);
     }
     checkingTime += System.nanoTime() - start;
   }

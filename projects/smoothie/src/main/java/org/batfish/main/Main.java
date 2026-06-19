@@ -27,7 +27,7 @@ public class Main {
       Path tracePath;
       TraceParser parser;
       if (snowcap) {
-        tracePath = SmoothieConfig.snowcapTracesDir().resolve(name + "-" + suffix + ".json");
+        tracePath = SmoothieConfig.SNOWCAP_TRACES_DIR.resolve(name + "-" + suffix + ".json");
         parser = new SnowcapTraceParser();
       } else {
         tracePath = SmoothieConfig.conpannaTracesDir().resolve(name + "-" + suffix + "-fd-plan.json");

@@ -21,13 +21,14 @@ import java.util.Properties;
  *
  * <pre>
  * smoothie.input.base
- * smoothie.output.base
- * smoothie.traces.dir
- * smoothie.topologies.dir
- * smoothie.networks.example
- * smoothie.networks.internet2
+ * conpanna.traces.dir
  * smoothie.networks.cornetto
  * </pre>
+ *
+ * <p>Paths co-located in the smoothie module (under {@code topology-zoo/}) are hard-coded relative
+ * to the workspace root and exposed as constants. Bazel makes them available on the runfiles path
+ * during {@code bazel run}; when running via {@code java -jar}, the working directory must be the
+ * workspace root.
  */
 public final class SmoothieConfig {
   private static final Logger LOGGER = SmoothieLogger.LOGGER;
@@ -67,29 +68,27 @@ public final class SmoothieConfig {
     return get("smoothie.input.base");
   }
 
-  public static Path outputBase() {
-    return get("smoothie.output.base");
-  }
+  public static final Path OUTPUT_BASE =
+      Paths.get("projects/smoothie/outputs/topology-zoo");
 
-  public static Path snowcapTracesDir() {
-    return get("snowcap.traces.dir");
-  }
+  public static final Path TOPOLOGIES_DIR =
+      Paths.get("projects/smoothie/topology-zoo/gml");
+
+  public static final Path SNOWCAP_TRACES_DIR =
+      Paths.get("projects/smoothie/topology-zoo/traces");
+
+  public static final Path METIS_DIR =
+      Paths.get("projects/smoothie/topology-zoo/metis");
 
   public static Path conpannaTracesDir() {
     return get("conpanna.traces.dir");
   }
 
-  public static Path topologiesDir() {
-    return get("smoothie.topologies.dir");
-  }
+  public static final Path NETWORKS_EXAMPLE =
+      Paths.get("networks/example/candidate/configs");
 
-  public static Path networksExample() {
-    return get("smoothie.networks.example");
-  }
-
-  public static Path networksInternet2() {
-    return get("smoothie.networks.internet2");
-  }
+  public static final Path NETWORKS_INTERNET2 =
+      Paths.get("projects/smoothie/inputs/internet2-bagpipe-cleaned/configs");
 
   public static Path networksCornetto() {
     return get("smoothie.networks.cornetto");

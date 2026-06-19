@@ -78,7 +78,7 @@ public class GmlUtil {
 
   public static SimpleWeightedGraph<Node, Edge> readTopology(String name, int seed) {
     return readTopology(
-        BatfishUtil.INPUT_BASE.resolve(name).resolve(name + ".gml"),
+        SmoothieConfig.TOPOLOGIES_DIR.resolve(name + ".gml"),
         BatfishUtil.INPUT_BASE.resolve(name).resolve(name + ".json"),
         seed);
   }

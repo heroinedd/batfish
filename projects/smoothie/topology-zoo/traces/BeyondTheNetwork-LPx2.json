@@ -1,0 +1,1386 @@
+{
+  "subnetworks": [
+    [
+      47,
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      25,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46,
+      48,
+      49,
+      50,
+      51,
+      52
+    ]
+  ],
+  "trace": [
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_route_map",
+            "router": 5,
+            "direction": "incoming",
+            "order": 22,
+            "map": {
+              "order": 22,
+              "state": "allow",
+              "conds": [
+                {
+                  "type": "neighbor",
+                  "router": 19
+                }
+              ],
+              "set": [
+                {
+                  "type": "local_pref",
+                  "value": 200
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_route_map",
+            "router": 35,
+            "direction": "incoming",
+            "order": 21,
+            "map": {
+              "order": 21,
+              "state": "allow",
+              "conds": [
+                {
+                  "type": "neighbor",
+                  "router": 32
+                }
+              ],
+              "set": [
+                {
+                  "type": "local_pref",
+                  "value": 200
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_route_map",
+            "router": 3,
+            "direction": "incoming",
+            "order": 17,
+            "map": {
+              "order": 17,
+              "state": "allow",
+              "conds": [
+                {
+                  "type": "neighbor",
+                  "router": 31
+                }
+              ],
+              "set": [
+                {
+                  "type": "local_pref",
+                  "value": 200
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_route_map",
+            "router": 6,
+            "direction": "incoming",
+            "order": 9,
+            "map": {
+              "order": 9,
+              "state": "allow",
+              "conds": [
+                {
+                  "type": "neighbor",
+                  "router": 10
+                }
+              ],
+              "set": [
+                {
+                  "type": "local_pref",
+                  "value": 200
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_route_map",
+            "router": 3,
+            "direction": "incoming",
+            "order": 18,
+            "map": {
+              "order": 18,
+              "state": "allow",
+              "conds": [
+                {
+                  "type": "neighbor",
+                  "router": 22
+                }
+              ],
+              "set": [
+                {
+                  "type": "local_pref",
+                  "value": 200
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_route_map",
+            "router": 9,
+            "direction": "incoming",
+            "order": 10,
+            "map": {
+              "order": 10,
+              "state": "allow",
+              "conds": [
+                {
+                  "type": "neighbor",
+                  "router": 11
+                }
+              ],
+              "set": [
+                {
+                  "type": "local_pref",
+                  "value": 200
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_route_map",
+            "router": 3,
+            "direction": "incoming",
+            "order": 15,
+            "map": {
+              "order": 15,
+              "state": "allow",
+              "conds": [
+                {
+                  "type": "neighbor",
+                  "router": 13
+                }
+              ],
+              "set": [
+                {
+                  "type": "local_pref",
+                  "value": 200
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_route_map",
+            "router": 40,
+            "direction": "incoming",
+            "order": 20,
+            "map": {
+              "order": 20,
+              "state": "allow",
+              "conds": [
+                {
+                  "type": "neighbor",
+                  "router": 18
+                }
+              ],
+              "set": [
+                {
+                  "type": "local_pref",
+                  "value": 200
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_route_map",
+            "router": 6,
+            "direction": "incoming",
+            "order": 12,
+            "map": {
+              "order": 12,
+              "state": "allow",
+              "conds": [
+                {
+                  "type": "neighbor",
+                  "router": 14
+                }
+              ],
+              "set": [
+                {
+                  "type": "local_pref",
+                  "value": 200
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_route_map",
+            "router": 3,
+            "direction": "incoming",
+            "order": 13,
+            "map": {
+              "order": 13,
+              "state": "allow",
+              "conds": [
+                {
+                  "type": "neighbor",
+                  "router": 21
+                }
+              ],
+              "set": [
+                {
+                  "type": "local_pref",
+                  "value": 200
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_route_map",
+            "router": 47,
+            "direction": "incoming",
+            "order": 4,
+            "map": {
+              "order": 4,
+              "state": "allow",
+              "conds": [
+                {
+                  "type": "neighbor",
+                  "router": 34
+                }
+              ],
+              "set": [
+                {
+                  "type": "local_pref",
+                  "value": 200
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_route_map",
+            "router": 6,
+            "direction": "incoming",
+            "order": 11,
+            "map": {
+              "order": 11,
+              "state": "allow",
+              "conds": [
+                {
+                  "type": "neighbor",
+                  "router": 26
+                }
+              ],
+              "set": [
+                {
+                  "type": "local_pref",
+                  "value": 200
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_route_map",
+            "router": 52,
+            "direction": "incoming",
+            "order": 1,
+            "map": {
+              "order": 1,
+              "state": "allow",
+              "conds": [
+                {
+                  "type": "neighbor",
+                  "router": 15
+                }
+              ],
+              "set": [
+                {
+                  "type": "local_pref",
+                  "value": 200
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_route_map",
+            "router": 49,
+            "direction": "incoming",
+            "order": 7,
+            "map": {
+              "order": 7,
+              "state": "allow",
+              "conds": [
+                {
+                  "type": "neighbor",
+                  "router": 29
+                }
+              ],
+              "set": [
+                {
+                  "type": "local_pref",
+                  "value": 200
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_route_map",
+            "router": 49,
+            "direction": "incoming",
+            "order": 5,
+            "map": {
+              "order": 5,
+              "state": "allow",
+              "conds": [
+                {
+                  "type": "neighbor",
+                  "router": 17
+                }
+              ],
+              "set": [
+                {
+                  "type": "local_pref",
+                  "value": 200
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_route_map",
+            "router": 5,
+            "direction": "incoming",
+            "order": 2,
+            "map": {
+              "order": 2,
+              "state": "allow",
+              "conds": [
+                {
+                  "type": "neighbor",
+                  "router": 12
+                }
+              ],
+              "set": [
+                {
+                  "type": "local_pref",
+                  "value": 200
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_route_map",
+            "router": 35,
+            "direction": "incoming",
+            "order": 6,
+            "map": {
+              "order": 6,
+              "state": "allow",
+              "conds": [
+                {
+                  "type": "neighbor",
+                  "router": 16
+                }
+              ],
+              "set": [
+                {
+                  "type": "local_pref",
+                  "value": 200
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_route_map",
+            "router": 51,
+            "direction": "incoming",
+            "order": 24,
+            "map": {
+              "order": 24,
+              "state": "allow",
+              "conds": [
+                {
+                  "type": "neighbor",
+                  "router": 23
+                }
+              ],
+              "set": [
+                {
+                  "type": "local_pref",
+                  "value": 200
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_route_map",
+            "router": 9,
+            "direction": "incoming",
+            "order": 3,
+            "map": {
+              "order": 3,
+              "state": "allow",
+              "conds": [
+                {
+                  "type": "neighbor",
+                  "router": 27
+                }
+              ],
+              "set": [
+                {
+                  "type": "local_pref",
+                  "value": 200
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_route_map",
+            "router": 40,
+            "direction": "incoming",
+            "order": 19,
+            "map": {
+              "order": 19,
+              "state": "allow",
+              "conds": [
+                {
+                  "type": "neighbor",
+                  "router": 24
+                }
+              ],
+              "set": [
+                {
+                  "type": "local_pref",
+                  "value": 200
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_route_map",
+            "router": 47,
+            "direction": "incoming",
+            "order": 14,
+            "map": {
+              "order": 14,
+              "state": "allow",
+              "conds": [
+                {
+                  "type": "neighbor",
+                  "router": 30
+                }
+              ],
+              "set": [
+                {
+                  "type": "local_pref",
+                  "value": 200
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_route_map",
+            "router": 5,
+            "direction": "incoming",
+            "order": 23,
+            "map": {
+              "order": 23,
+              "state": "allow",
+              "conds": [
+                {
+                  "type": "neighbor",
+                  "router": 20
+                }
+              ],
+              "set": [
+                {
+                  "type": "local_pref",
+                  "value": 200
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_route_map",
+            "router": 3,
+            "direction": "incoming",
+            "order": 8,
+            "map": {
+              "order": 8,
+              "state": "allow",
+              "conds": [
+                {
+                  "type": "neighbor",
+                  "router": 33
+                }
+              ],
+              "set": [
+                {
+                  "type": "local_pref",
+                  "value": 200
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_route_map",
+            "router": 9,
+            "direction": "incoming",
+            "order": 16,
+            "map": {
+              "order": 16,
+              "state": "allow",
+              "conds": [
+                {
+                  "type": "neighbor",
+                  "router": 28
+                }
+              ],
+              "set": [
+                {
+                  "type": "local_pref",
+                  "value": 200
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "solution",
+      "ordering": [
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_route_map",
+            "router": 5,
+            "direction": "incoming",
+            "order": 22,
+            "map": {
+              "order": 22,
+              "state": "allow",
+              "conds": [
+                {
+                  "type": "neighbor",
+                  "router": 19
+                }
+              ],
+              "set": [
+                {
+                  "type": "local_pref",
+                  "value": 200
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_route_map",
+            "router": 35,
+            "direction": "incoming",
+            "order": 21,
+            "map": {
+              "order": 21,
+              "state": "allow",
+              "conds": [
+                {
+                  "type": "neighbor",
+                  "router": 32
+                }
+              ],
+              "set": [
+                {
+                  "type": "local_pref",
+                  "value": 200
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_route_map",
+            "router": 3,
+            "direction": "incoming",
+            "order": 17,
+            "map": {
+              "order": 17,
+              "state": "allow",
+              "conds": [
+                {
+                  "type": "neighbor",
+                  "router": 31
+                }
+              ],
+              "set": [
+                {
+                  "type": "local_pref",
+                  "value": 200
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_route_map",
+            "router": 6,
+            "direction": "incoming",
+            "order": 9,
+            "map": {
+              "order": 9,
+              "state": "allow",
+              "conds": [
+                {
+                  "type": "neighbor",
+                  "router": 10
+                }
+              ],
+              "set": [
+                {
+                  "type": "local_pref",
+                  "value": 200
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_route_map",
+            "router": 3,
+            "direction": "incoming",
+            "order": 18,
+            "map": {
+              "order": 18,
+              "state": "allow",
+              "conds": [
+                {
+                  "type": "neighbor",
+                  "router": 22
+                }
+              ],
+              "set": [
+                {
+                  "type": "local_pref",
+                  "value": 200
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_route_map",
+            "router": 9,
+            "direction": "incoming",
+            "order": 10,
+            "map": {
+              "order": 10,
+              "state": "allow",
+              "conds": [
+                {
+                  "type": "neighbor",
+                  "router": 11
+                }
+              ],
+              "set": [
+                {
+                  "type": "local_pref",
+                  "value": 200
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_route_map",
+            "router": 3,
+            "direction": "incoming",
+            "order": 15,
+            "map": {
+              "order": 15,
+              "state": "allow",
+              "conds": [
+                {
+                  "type": "neighbor",
+                  "router": 13
+                }
+              ],
+              "set": [
+                {
+                  "type": "local_pref",
+                  "value": 200
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_route_map",
+            "router": 40,
+            "direction": "incoming",
+            "order": 20,
+            "map": {
+              "order": 20,
+              "state": "allow",
+              "conds": [
+                {
+                  "type": "neighbor",
+                  "router": 18
+                }
+              ],
+              "set": [
+                {
+                  "type": "local_pref",
+                  "value": 200
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_route_map",
+            "router": 6,
+            "direction": "incoming",
+            "order": 12,
+            "map": {
+              "order": 12,
+              "state": "allow",
+              "conds": [
+                {
+                  "type": "neighbor",
+                  "router": 14
+                }
+              ],
+              "set": [
+                {
+                  "type": "local_pref",
+                  "value": 200
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_route_map",
+            "router": 3,
+            "direction": "incoming",
+            "order": 13,
+            "map": {
+              "order": 13,
+              "state": "allow",
+              "conds": [
+                {
+                  "type": "neighbor",
+                  "router": 21
+                }
+              ],
+              "set": [
+                {
+                  "type": "local_pref",
+                  "value": 200
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_route_map",
+            "router": 47,
+            "direction": "incoming",
+            "order": 4,
+            "map": {
+              "order": 4,
+              "state": "allow",
+              "conds": [
+                {
+                  "type": "neighbor",
+                  "router": 34
+                }
+              ],
+              "set": [
+                {
+                  "type": "local_pref",
+                  "value": 200
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_route_map",
+            "router": 6,
+            "direction": "incoming",
+            "order": 11,
+            "map": {
+              "order": 11,
+              "state": "allow",
+              "conds": [
+                {
+                  "type": "neighbor",
+                  "router": 26
+                }
+              ],
+              "set": [
+                {
+                  "type": "local_pref",
+                  "value": 200
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_route_map",
+            "router": 52,
+            "direction": "incoming",
+            "order": 1,
+            "map": {
+              "order": 1,
+              "state": "allow",
+              "conds": [
+                {
+                  "type": "neighbor",
+                  "router": 15
+                }
+              ],
+              "set": [
+                {
+                  "type": "local_pref",
+                  "value": 200
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_route_map",
+            "router": 49,
+            "direction": "incoming",
+            "order": 7,
+            "map": {
+              "order": 7,
+              "state": "allow",
+              "conds": [
+                {
+                  "type": "neighbor",
+                  "router": 29
+                }
+              ],
+              "set": [
+                {
+                  "type": "local_pref",
+                  "value": 200
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_route_map",
+            "router": 49,
+            "direction": "incoming",
+            "order": 5,
+            "map": {
+              "order": 5,
+              "state": "allow",
+              "conds": [
+                {
+                  "type": "neighbor",
+                  "router": 17
+                }
+              ],
+              "set": [
+                {
+                  "type": "local_pref",
+                  "value": 200
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_route_map",
+            "router": 5,
+            "direction": "incoming",
+            "order": 2,
+            "map": {
+              "order": 2,
+              "state": "allow",
+              "conds": [
+                {
+                  "type": "neighbor",
+                  "router": 12
+                }
+              ],
+              "set": [
+                {
+                  "type": "local_pref",
+                  "value": 200
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_route_map",
+            "router": 35,
+            "direction": "incoming",
+            "order": 6,
+            "map": {
+              "order": 6,
+              "state": "allow",
+              "conds": [
+                {
+                  "type": "neighbor",
+                  "router": 16
+                }
+              ],
+              "set": [
+                {
+                  "type": "local_pref",
+                  "value": 200
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_route_map",
+            "router": 51,
+            "direction": "incoming",
+            "order": 24,
+            "map": {
+              "order": 24,
+              "state": "allow",
+              "conds": [
+                {
+                  "type": "neighbor",
+                  "router": 23
+                }
+              ],
+              "set": [
+                {
+                  "type": "local_pref",
+                  "value": 200
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_route_map",
+            "router": 9,
+            "direction": "incoming",
+            "order": 3,
+            "map": {
+              "order": 3,
+              "state": "allow",
+              "conds": [
+                {
+                  "type": "neighbor",
+                  "router": 27
+                }
+              ],
+              "set": [
+                {
+                  "type": "local_pref",
+                  "value": 200
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_route_map",
+            "router": 40,
+            "direction": "incoming",
+            "order": 19,
+            "map": {
+              "order": 19,
+              "state": "allow",
+              "conds": [
+                {
+                  "type": "neighbor",
+                  "router": 24
+                }
+              ],
+              "set": [
+                {
+                  "type": "local_pref",
+                  "value": 200
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_route_map",
+            "router": 47,
+            "direction": "incoming",
+            "order": 14,
+            "map": {
+              "order": 14,
+              "state": "allow",
+              "conds": [
+                {
+                  "type": "neighbor",
+                  "router": 30
+                }
+              ],
+              "set": [
+                {
+                  "type": "local_pref",
+                  "value": 200
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_route_map",
+            "router": 5,
+            "direction": "incoming",
+            "order": 23,
+            "map": {
+              "order": 23,
+              "state": "allow",
+              "conds": [
+                {
+                  "type": "neighbor",
+                  "router": 20
+                }
+              ],
+              "set": [
+                {
+                  "type": "local_pref",
+                  "value": 200
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_route_map",
+            "router": 3,
+            "direction": "incoming",
+            "order": 8,
+            "map": {
+              "order": 8,
+              "state": "allow",
+              "conds": [
+                {
+                  "type": "neighbor",
+                  "router": 33
+                }
+              ],
+              "set": [
+                {
+                  "type": "local_pref",
+                  "value": 200
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_route_map",
+            "router": 9,
+            "direction": "incoming",
+            "order": 16,
+            "map": {
+              "order": 16,
+              "state": "allow",
+              "conds": [
+                {
+                  "type": "neighbor",
+                  "router": 28
+                }
+              ],
+              "set": [
+                {
+                  "type": "local_pref",
+                  "value": 200
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

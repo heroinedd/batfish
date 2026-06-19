@@ -3,10 +3,16 @@ load("@batfish//skylark:pmd_test.bzl", "pmd_test")
 
 package(default_visibility = ["//visibility:public"])
 
+filegroup(
+    name = "topology-zoo-data",
+    srcs = glob(["topology-zoo/**"]),
+)
+
 java_binary(
     name = "main",
     srcs = ["src/main/java/org/batfish/main/Main.java"],
     main_class = "org.batfish.main.Main",
+    data = [":topology-zoo-data"],
     deps = [
         ":smoothie",
         "//projects/batfish-common-protocol/src/main/java:common_lib",

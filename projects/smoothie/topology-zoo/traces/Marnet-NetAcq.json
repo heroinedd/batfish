@@ -1,0 +1,920 @@
+{
+  "subnetworks": [
+    [
+      2,
+      0,
+      3,
+      5,
+      7,
+      8,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17
+    ],
+    [
+      4,
+      10,
+      11,
+      18,
+      19
+    ]
+  ],
+  "trace": [
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 17,
+            "target": 4,
+            "weight": null
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 17,
+            "target": 4,
+            "weight": 27.0
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 10,
+            "target": 4,
+            "weight": 2.0
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 10,
+            "target": 4,
+            "weight": 1.0
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 4,
+            "target": 17,
+            "weight": null
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 4,
+            "target": 17,
+            "weight": 27.0
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 2,
+            "target": 4,
+            "weight": null
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 2,
+            "target": 4,
+            "weight": 36.0
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 16,
+            "target": 4,
+            "weight": null
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 16,
+            "target": 4,
+            "weight": 2.0
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 2,
+            "target": 11,
+            "weight": null
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 2,
+            "target": 11,
+            "weight": 69.0
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 18,
+            "target": 4,
+            "weight": 2.0
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 18,
+            "target": 4,
+            "weight": 1.0
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 2,
+            "target": 10,
+            "weight": null
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 2,
+            "target": 10,
+            "weight": 75.0
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 19,
+            "target": 2,
+            "weight": null
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 19,
+            "target": 2,
+            "weight": 88.0
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 4,
+            "target": 11,
+            "weight": 2.0
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 4,
+            "target": 11,
+            "weight": 1.0
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 11,
+            "target": 4,
+            "weight": 2.0
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 11,
+            "target": 4,
+            "weight": 1.0
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 7,
+            "target": 4,
+            "weight": null
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 7,
+            "target": 4,
+            "weight": 52.0
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 18,
+            "target": 2,
+            "weight": null
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 18,
+            "target": 2,
+            "weight": 32.0
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 2,
+            "target": 18,
+            "weight": null
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 2,
+            "target": 18,
+            "weight": 32.0
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 4,
+            "target": 2,
+            "weight": null
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 4,
+            "target": 2,
+            "weight": 36.0
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 11,
+            "target": 2,
+            "weight": null
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 11,
+            "target": 2,
+            "weight": 69.0
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 4,
+            "target": 16,
+            "weight": null
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 4,
+            "target": 16,
+            "weight": 2.0
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 4,
+            "target": 10,
+            "weight": 2.0
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 4,
+            "target": 10,
+            "weight": 1.0
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 10,
+            "target": 2,
+            "weight": null
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 10,
+            "target": 2,
+            "weight": 75.0
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 2,
+            "target": 19,
+            "weight": null
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 2,
+            "target": 19,
+            "weight": 88.0
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 4,
+            "target": 19,
+            "weight": 2.0
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 4,
+            "target": 19,
+            "weight": 1.0
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 4,
+            "target": 18,
+            "weight": 2.0
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 4,
+            "target": 18,
+            "weight": 1.0
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 4,
+            "target": 7,
+            "weight": null
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 4,
+            "target": 7,
+            "weight": 52.0
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_session",
+            "source": 2,
+            "target": 4,
+            "session_type": "ibgp_peer"
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 19,
+            "target": 4,
+            "weight": 2.0
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 19,
+            "target": 4,
+            "weight": 1.0
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "solution",
+      "ordering": [
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 17,
+            "target": 4,
+            "weight": null
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 17,
+            "target": 4,
+            "weight": 27.0
+          }
+        },
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 10,
+            "target": 4,
+            "weight": 2.0
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 10,
+            "target": 4,
+            "weight": 1.0
+          }
+        },
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 4,
+            "target": 17,
+            "weight": null
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 4,
+            "target": 17,
+            "weight": 27.0
+          }
+        },
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 2,
+            "target": 4,
+            "weight": null
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 2,
+            "target": 4,
+            "weight": 36.0
+          }
+        },
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 16,
+            "target": 4,
+            "weight": null
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 16,
+            "target": 4,
+            "weight": 2.0
+          }
+        },
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 2,
+            "target": 11,
+            "weight": null
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 2,
+            "target": 11,
+            "weight": 69.0
+          }
+        },
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 18,
+            "target": 4,
+            "weight": 2.0
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 18,
+            "target": 4,
+            "weight": 1.0
+          }
+        },
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 2,
+            "target": 10,
+            "weight": null
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 2,
+            "target": 10,
+            "weight": 75.0
+          }
+        },
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 19,
+            "target": 2,
+            "weight": null
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 19,
+            "target": 2,
+            "weight": 88.0
+          }
+        },
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 4,
+            "target": 11,
+            "weight": 2.0
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 4,
+            "target": 11,
+            "weight": 1.0
+          }
+        },
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 11,
+            "target": 4,
+            "weight": 2.0
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 11,
+            "target": 4,
+            "weight": 1.0
+          }
+        },
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 7,
+            "target": 4,
+            "weight": null
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 7,
+            "target": 4,
+            "weight": 52.0
+          }
+        },
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 18,
+            "target": 2,
+            "weight": null
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 18,
+            "target": 2,
+            "weight": 32.0
+          }
+        },
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 2,
+            "target": 18,
+            "weight": null
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 2,
+            "target": 18,
+            "weight": 32.0
+          }
+        },
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 4,
+            "target": 2,
+            "weight": null
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 4,
+            "target": 2,
+            "weight": 36.0
+          }
+        },
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 11,
+            "target": 2,
+            "weight": null
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 11,
+            "target": 2,
+            "weight": 69.0
+          }
+        },
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 4,
+            "target": 16,
+            "weight": null
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 4,
+            "target": 16,
+            "weight": 2.0
+          }
+        },
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 4,
+            "target": 10,
+            "weight": 2.0
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 4,
+            "target": 10,
+            "weight": 1.0
+          }
+        },
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 10,
+            "target": 2,
+            "weight": null
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 10,
+            "target": 2,
+            "weight": 75.0
+          }
+        },
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 2,
+            "target": 19,
+            "weight": null
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 2,
+            "target": 19,
+            "weight": 88.0
+          }
+        },
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 4,
+            "target": 19,
+            "weight": 2.0
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 4,
+            "target": 19,
+            "weight": 1.0
+          }
+        },
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 4,
+            "target": 18,
+            "weight": 2.0
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 4,
+            "target": 18,
+            "weight": 1.0
+          }
+        },
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 4,
+            "target": 7,
+            "weight": null
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 4,
+            "target": 7,
+            "weight": 52.0
+          }
+        },
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_session",
+            "source": 2,
+            "target": 4,
+            "session_type": "ibgp_peer"
+          }
+        },
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 19,
+            "target": 4,
+            "weight": 2.0
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 19,
+            "target": 4,
+            "weight": 1.0
+          }
+        }
+      ]
+    }
+  ]
+}

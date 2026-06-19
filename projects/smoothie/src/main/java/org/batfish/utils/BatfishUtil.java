@@ -40,7 +40,7 @@ public class BatfishUtil {
   private static final Logger LOGGER = SmoothieLogger.LOGGER;
 
   public static final Path INPUT_BASE = SmoothieConfig.inputBase();
-  public static final Path OUTPUT_BASE = SmoothieConfig.outputBase();
+  public static final Path OUTPUT_BASE = SmoothieConfig.OUTPUT_BASE;
 
   public static final String CONTAINERS = "containers";
   public static final String NETWORKS = "networks";

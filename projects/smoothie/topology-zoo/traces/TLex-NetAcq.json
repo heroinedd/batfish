@@ -1,0 +1,331 @@
+{
+  "subnetworks": [
+    [
+      3,
+      2
+    ],
+    [
+      11,
+      10
+    ]
+  ],
+  "trace": [
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 11,
+            "target": 2,
+            "weight": null
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 11,
+            "target": 2,
+            "weight": 69.0
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 3,
+            "target": 10,
+            "weight": null
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 3,
+            "target": 10,
+            "weight": 41.0
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 11,
+            "target": 10,
+            "weight": 2.0
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 11,
+            "target": 10,
+            "weight": 1.0
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_session",
+            "source": 11,
+            "target": 3,
+            "session_type": "ibgp_peer"
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 3,
+            "target": 11,
+            "weight": null
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 3,
+            "target": 11,
+            "weight": 86.0
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 11,
+            "target": 3,
+            "weight": null
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 11,
+            "target": 3,
+            "weight": 86.0
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 10,
+            "target": 3,
+            "weight": null
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 10,
+            "target": 3,
+            "weight": 41.0
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 2,
+            "target": 11,
+            "weight": null
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 2,
+            "target": 11,
+            "weight": 69.0
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "attempt",
+      "attempted": [
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 10,
+            "target": 11,
+            "weight": 2.0
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 10,
+            "target": 11,
+            "weight": 1.0
+          }
+        }
+      ],
+      "success": true
+    },
+    {
+      "event": "solution",
+      "ordering": [
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 11,
+            "target": 2,
+            "weight": null
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 11,
+            "target": 2,
+            "weight": 69.0
+          }
+        },
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 3,
+            "target": 10,
+            "weight": null
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 3,
+            "target": 10,
+            "weight": 41.0
+          }
+        },
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 11,
+            "target": 10,
+            "weight": 2.0
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 11,
+            "target": 10,
+            "weight": 1.0
+          }
+        },
+        {
+          "type": "insert",
+          "expr": {
+            "type": "bgp_session",
+            "source": 11,
+            "target": 3,
+            "session_type": "ibgp_peer"
+          }
+        },
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 3,
+            "target": 11,
+            "weight": null
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 3,
+            "target": 11,
+            "weight": 86.0
+          }
+        },
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 11,
+            "target": 3,
+            "weight": null
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 11,
+            "target": 3,
+            "weight": 86.0
+          }
+        },
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 10,
+            "target": 3,
+            "weight": null
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 10,
+            "target": 3,
+            "weight": 41.0
+          }
+        },
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 2,
+            "target": 11,
+            "weight": null
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 2,
+            "target": 11,
+            "weight": 69.0
+          }
+        },
+        {
+          "type": "update",
+          "from": {
+            "type": "igp_link_weight",
+            "source": 10,
+            "target": 11,
+            "weight": 2.0
+          },
+          "to": {
+            "type": "igp_link_weight",
+            "source": 10,
+            "target": 11,
+            "weight": 1.0
+          }
+        }
+      ]
+    }
+  ]
+}
