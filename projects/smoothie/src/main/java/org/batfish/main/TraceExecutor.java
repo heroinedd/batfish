@@ -75,6 +75,13 @@ public class TraceExecutor {
     initialConfigs = initialCfgs;
     finalConfigs = finalCfgs == null ? initialCfgs : finalCfgs;
 
+    // combine routing policies here to avoid NullPointerException
+    for (Map.Entry<String, Configuration> entry : initialConfigs.entrySet()) {
+      Configuration initialC = entry.getValue();
+      Configuration finalC = finalConfigs.get(entry.getKey());
+      initialC.getRoutingPolicies().putAll(finalC.getRoutingPolicies());
+    }
+
     Triple<Path, StorageProvider, Batfish> triple =
         BatfishUtil.getBatfishFromConfiguration(
             BatfishUtil.OUTPUT_BASE, name, "initial", new TreeMap<>(initialConfigs), null, false);
