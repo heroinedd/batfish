@@ -145,8 +145,11 @@ public class ConfigUtil {
     networks.forEach(p -> bgpNetwork(c, p));
     bgpRedistributionPolicy(c);
 
-    // set tie-breaker to router-id for deterministic simulation result
+    // set tie-breaker to router-id for deterministic simulation result;
+    // use PATH_LENGTH multipath mode so routes with same-length but different AS paths still
+    // fall through to the ROUTER_ID tiebreaker (EXACT_PATH would drop any route arriving second)
     proc.setTieBreaker(BgpTieBreaker.ROUTER_ID);
+    proc.setMultipathEquivalentAsPathMatchMode(MultipathEquivalentAsPathMatchMode.PATH_LENGTH);
 
     return proc;
   }
