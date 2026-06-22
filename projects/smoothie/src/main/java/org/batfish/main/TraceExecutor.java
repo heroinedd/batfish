@@ -1,9 +1,11 @@
 package org.batfish.main;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.graph.EndpointPair;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.Logger;
+import org.batfish.common.util.BatfishObjectMapper;
 import org.batfish.common.NetworkSnapshot;
 import org.batfish.datamodel.*;
 import org.batfish.datamodel.answers.ConvertConfigurationAnswerElement;
@@ -142,10 +144,38 @@ public class TraceExecutor {
     }
   }
 
-  /** Executes all steps in the trace against the simulator. */
+  /**
+   * Executes all steps in the trace against the simulator.
+   *
+   * <p>When debug logging is enabled, writes one JSON object per line (NDJSON) to {@code
+   * <snapshot>/bgp-ribs.ndjson}: {@code {"step":N,"ribs":{hostname:{"best":[...],"backup":[...]}}}}
+   * Each line is flushed immediately, so the file is valid even if the JVM exits on a safety
+   * violation mid-run.
+   */
   public void execute(List<TraceParser.Step> steps) {
-    for (TraceParser.Step step : steps) {
-      executeStep(step.actions, step.isUndo, step.success);
+    if (!SmoothieLogger.isDebug()) {
+      for (TraceParser.Step step : steps) {
+        executeStep(step.actions, step.isUndo, step.success);
+      }
+      return;
+    }
+
+    Path ribDumpPath = base.resolve("bgp-ribs.ndjson");
+    ObjectMapper mapper = BatfishObjectMapper.mapper();
+    try (java.io.BufferedWriter writer =
+        java.nio.file.Files.newBufferedWriter(ribDumpPath)) {
+      for (int i = 0; i < steps.size(); i++) {
+        executeStep(steps.get(i).actions, steps.get(i).isUndo, steps.get(i).success);
+        Map<String, Object> snapshot = new LinkedHashMap<>();
+        snapshot.put("step", i);
+        snapshot.put("ribs", simulator.getBgpRibSnapshot());
+        writer.write(mapper.writeValueAsString(snapshot));
+        writer.newLine();
+        writer.flush();
+      }
+      LOGGER.debug("Wrote BGP RIB snapshots to {}", ribDumpPath);
+    } catch (IOException e) {
+      LOGGER.error("Failed to write BGP RIB snapshots: {}", e.getMessage());
     }
   }
 

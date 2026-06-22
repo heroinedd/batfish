@@ -2,6 +2,7 @@ package org.batfish.dataplane.ibdp;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Table;
 import com.google.common.graph.EndpointPair;
 import com.google.common.graph.MutableValueGraph;
@@ -451,6 +452,29 @@ public class IncrementalSimulator {
 
   public BgpTopology getBgpTopology() {
     return initDataPlaneResult._topologies.getBgpTopology();
+  }
+
+  /**
+   * Returns a snapshot of the current BGP RIB for every node.
+   *
+   * <p>Each node maps to a two-key map: {@code "best"} → best-path routes, {@code "backup"} →
+   * backup routes.
+   */
+  public Map<String, Map<String, Set<Bgpv4Route>>> getBgpRibSnapshot() {
+    return currDataPlaneResult.getNodes().entrySet().stream()
+        .collect(
+            Collectors.toMap(
+                Map.Entry::getKey,
+                e -> {
+                  Optional<VirtualRouter> vr =
+                      e.getValue().getVirtualRouter(Configuration.DEFAULT_VRF_NAME);
+                  Map<String, Set<Bgpv4Route>> rib = new LinkedHashMap<>();
+                  rib.put("best", vr.map(VirtualRouter::getBgpRoutes).orElse(ImmutableSet.of()));
+                  rib.put(
+                      "backup",
+                      vr.map(VirtualRouter::getBgpBackupRoutes).orElse(ImmutableSet.of()));
+                  return rib;
+                }));
   }
 
   private static Map<String, Configuration> getConfigs(Map<String, Node> nodes) {
