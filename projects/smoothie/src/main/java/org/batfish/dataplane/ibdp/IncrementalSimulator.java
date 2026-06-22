@@ -44,7 +44,7 @@ import static org.batfish.dataplane.ibdp.IncrementalBdpEngine.*;
 public class IncrementalSimulator {
   private static final Logger LOGGER = SmoothieLogger.LOGGER;
 
-  public static boolean DEBUG_RIB_DIFF = false;
+  public static boolean DEBUG_RIB_DIFF = true;
   public static boolean OPTIMIZE = true;
 
   Batfish batfish;
@@ -295,7 +295,10 @@ public class IncrementalSimulator {
         iterationVrs.parallelStream().forEach(VirtualRouter::endOfEgpInnerRound);
         ++nodeSet;
       }
-    } while (vrs.parallelStream().anyMatch(VirtualRouter::isDirty));
+    } while (vrs.parallelStream().anyMatch(VirtualRouter::isDirty) && numIterations < 100);
+    if (numIterations == 100) {
+      LOGGER.error("Oscillating");
+    }
   }
 
   private void updateCurrentDataplane(
