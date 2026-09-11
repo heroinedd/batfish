@@ -30,7 +30,8 @@ public class Main {
         tracePath = SmoothieConfig.SNOWCAP_TRACES_DIR.resolve(name + "-" + suffix + ".json");
         parser = new SnowcapTraceParser();
       } else {
-        tracePath = SmoothieConfig.conpannaTracesDir().resolve(name + "-" + suffix + "-fd-plan.json");
+        tracePath =
+            SmoothieConfig.conpannaTracesDir().resolve(name + "-" + suffix + "-fd-plan.json");
         parser = new ConPannaTraceParser();
       }
       Pair<List<List<Integer>>, List<TraceParser.Step>> parsed = parser.parse(tracePath);
@@ -50,8 +51,10 @@ public class Main {
       String name, String suffix, TraceExecutor executor, double duration) {
     double ioTime = executor.getIoTime() / 1e9;
     double checkingTime = executor.getCheckingTime() / 1e9;
+    double initialTime = executor.getInitialTime() / 1e9;
     LOGGER.info("{}-{} finish in {}s", name, suffix, duration);
-    System.out.printf("%s-%s\t%f\t%f\t%f\n", name, suffix, ioTime, checkingTime, duration);
+    System.out.printf(
+        "%s-%s\t%f\t%f\t%f\t%f\n", name, suffix, ioTime, checkingTime, initialTime, duration);
     executor.cleanOutput();
   }
 

@@ -44,7 +44,7 @@ import static org.batfish.dataplane.ibdp.IncrementalBdpEngine.*;
 public class IncrementalSimulator {
   private static final Logger LOGGER = SmoothieLogger.LOGGER;
 
-  public static boolean DEBUG_RIB_DIFF = true;
+  public static boolean DEBUG_RIB_DIFF = false;
   public static boolean OPTIMIZE = true;
 
   Batfish batfish;
